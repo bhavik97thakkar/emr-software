@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Phone, User, Calendar, Loader2, CreditCard, Droplets, MapPin, Mail, Hash, Stethoscope, Briefcase, AlertCircle, Cigarette, Wine, Pill } from 'lucide-react';
 import { DB } from '../services/db';
 import { Patient, Visit } from '../types';
+import { useToast } from '../context/ToastContext';
 import VisitForm from './VisitForm';
 import { GENDERS } from '../constants';
 import VoiceInput from './VoiceInput';
@@ -12,6 +13,7 @@ const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const NewVisit = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const toast = useToast();
 
     const [patientData, setPatientData] = useState<Partial<Patient>>({
         mobile: searchParams.get('mobile') || '',
@@ -87,7 +89,7 @@ const NewVisit = () => {
         if (isSubmitting) return;
 
         if (!patientData.mobile || !patientData.name || patientData.age === undefined) {
-            alert("Please fill essential patient details (Mobile, Name, Age)");
+            toast.error("Please fill essential patient details (Mobile, Name, Age)");
             formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             return;
         }
@@ -100,7 +102,7 @@ const NewVisit = () => {
             await DB.savePatient(registeredPatient);
         } catch (err) {
             console.error("Registration error:", err);
-            alert("Registration failed. Please try again.");
+            toast.error("Registration failed. Please try again.");
             setIsSubmitting(false);
             return;
         }
@@ -113,7 +115,7 @@ const NewVisit = () => {
             navigate(`/patient/${registeredPatient.mobile}${shouldPrint ? '?print=true' : ''}`);
         } catch (err) {
             setIsSubmitting(false);
-            alert("Error saving visit details.");
+            toast.error("Error saving visit details.");
         }
     };
 

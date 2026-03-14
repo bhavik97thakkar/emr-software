@@ -138,10 +138,15 @@ const PatientList = () => {
                       onClick={async (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (window.confirm(`Permanently delete ${p.name || 'this record'}?`)) {
-                          const success = await DB.deletePatient(p.mobile);
-                          if (success) toast.success("Patient removed from registry");
-                        }
+                        toast.confirm({
+                          title: "Delete Patient",
+                          message: `Permanently delete ${p.name || 'this record'}?`,
+                          danger: true,
+                          onConfirm: async () => {
+                            const success = await DB.deletePatient(p.mobile);
+                            if (success) toast.success("Patient removed from registry");
+                          }
+                        });
                       }}
                       className="p-3 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
                       title="Delete Patient"

@@ -86,11 +86,16 @@ const AppointmentModal = ({
   };
 
   const handleDelete = async () => {
-    if (window.confirm("Permanently remove this appointment record?")) {
-      await DB.deleteAppointment(formData.id);
-      onRefresh();
-      onClose();
-    }
+    toast.confirm({
+      title: "Remove Appointment",
+      message: "Permanently remove this appointment record?",
+      danger: true,
+      onConfirm: async () => {
+        await DB.deleteAppointment(formData.id);
+        onRefresh();
+        onClose();
+      }
+    });
   };
 
   return (
@@ -622,10 +627,16 @@ const PatientProfile = () => {
 
   const handleUnlink = async (e: React.MouseEvent, mMobile: string) => {
     e.stopPropagation();
-    if (window.confirm("Remove this member from the family group?")) {
-      await DB.unlinkFamilyMember(mMobile);
-      if (patient) refreshData(patient.mobile);
-    }
+    toast.confirm({
+      title: "Remove Family Member",
+      message: "Are you sure you want to remove this member from the family group?",
+      danger: true,
+      onConfirm: async () => {
+        await DB.unlinkFamilyMember(mMobile);
+        if (patient) await refreshData(patient.mobile);
+        toast.success("Family relationship removed");
+      }
+    });
   };
 
   const toggleEncounterSelection = (visitId: string) => {
@@ -649,24 +660,34 @@ const PatientProfile = () => {
   };
 
   const handleDeleteEncounter = async (visitId: string) => {
-    if (window.confirm("Delete this encounter record? This action cannot be undone.")) {
-      await DB.deleteVisit(visitId);
-      setSelectedEncounters(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(visitId);
-        return newSet;
-      });
-      if (patient) await refreshData(patient.mobile);
-    }
+    toast.confirm({
+      title: "Delete Encounter",
+      message: "Delete this encounter record? This action cannot be undone.",
+      danger: true,
+      onConfirm: async () => {
+        await DB.deleteVisit(visitId);
+        setSelectedEncounters(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(visitId);
+          return newSet;
+        });
+        if (patient) await refreshData(patient.mobile);
+      }
+    });
   };
 
   const handleDeleteSelected = async () => {
     if (selectedEncounters.size === 0) return;
-    if (window.confirm(`Delete ${selectedEncounters.size} selected encounter(s)? This action cannot be undone.`)) {
-      await DB.deleteVisits(Array.from(selectedEncounters));
-      setSelectedEncounters(new Set());
-      if (patient) await refreshData(patient.mobile);
-    }
+    toast.confirm({
+      title: "Delete Selected",
+      message: `Delete ${selectedEncounters.size} selected encounter(s)? This action cannot be undone.`,
+      danger: true,
+      onConfirm: async () => {
+        await DB.deleteVisits(Array.from(selectedEncounters));
+        setSelectedEncounters(new Set());
+        if (patient) await refreshData(patient.mobile);
+      }
+    });
   };
 
   if (!patient) return null;
@@ -686,12 +707,17 @@ const PatientProfile = () => {
                 <div className="relative group/delete">
                   <button
                     onClick={() => {
-                      if (window.confirm("Are you sure you want to permanently delete this patient and all their medical records? This cannot be undone.")) {
-                        DB.deletePatient(patient.mobile).then(() => {
-                          toast.success("Patient record deleted successfully");
-                          navigate('/');
-                        });
-                      }
+                      toast.confirm({
+                        title: "Delete Patient",
+                        message: "Are you sure you want to permanently delete this patient and all their medical records? This cannot be undone.",
+                        danger: true,
+                        onConfirm: () => {
+                          DB.deletePatient(patient.mobile).then(() => {
+                            toast.success("Patient record deleted successfully");
+                            navigate('/');
+                          });
+                        }
+                      });
                     }}
                     className="ml-1 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg transition-all flex items-center space-x-2 border border-rose-100 opacity-30 hover:opacity-100 group-hover/delete:opacity-100"
                     title="Delete Profile"
