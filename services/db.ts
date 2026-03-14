@@ -9,7 +9,7 @@ const getApiUrl = () => {
     return 'http://localhost:5000/api';
   }
   // Use environment variable for production
-  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  return import.meta.env.VITE_API_URL || 'https://medcore-emr-backend.onrender.com/api';
 };
 
 const API_BASE_URL = getApiUrl();
