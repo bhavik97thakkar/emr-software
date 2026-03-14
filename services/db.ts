@@ -558,9 +558,21 @@ export const DB = {
     };
 
     if (dataType === 'patients' && data.patients.length > 0) {
-      const headers = ['Mobile', 'Name', 'Age', 'Gender', 'Blood Group', 'City'];
-      const rows = data.patients.map((p: any) => [p.mobile, p.name, p.age, p.gender, p.bloodGroup, p.city]);
-      this.downloadCSV('Patients_Export', headers, rows);
+      const headers = [
+        'Mobile', 'Name', 'Age', 'DOB', 'Gender', 'Blood Group', 
+        'Occupation', 'Address', 'Area', 'City', 'State', 'Pin', 'Country', 
+        'Email', 'Allergic (Other)', 'Allergic (Medicine)', 
+        'Smoking Habit', 'Alcohol Habit', 'Drug Abuse Habit', 
+        'Referred By', 'Created Date', 'Family ID', 'Past History Notes'
+      ];
+      const rows = data.patients.map((p: any) => [
+        p.mobile, p.name, p.age, p.dob || '', p.gender, p.bloodGroup || '',
+        p.occupation || '', p.address || '', p.area || '', p.city || '', p.state || '', p.pin || '', p.country || '',
+        p.email || '', p.allergyOther || '', p.allergyMedicine || '',
+        p.habits?.smoke || 'None', p.habits?.alcohol || 'None', p.habits?.drugAbuse || 'None',
+        p.referredBy || '', p.createdDate || '', p.familyId || '', p.pastHistoryNotes || ''
+      ]);
+      this.downloadCSV('Full_Patient_Registry', headers, rows);
     }
   },
 
