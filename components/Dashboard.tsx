@@ -1,8 +1,8 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Users, 
+import {
+  Users,
   Wallet,
   Clock,
   UserCheck,
@@ -26,7 +26,7 @@ import { Visit, Patient, Appointment, Family } from '../types';
 const StatCard = ({ title, value, subtitle, icon: Icon, colorClass, trend, trendValue, onClick, to }: any) => {
   const CardWrapper = to ? Link : 'div';
   return (
-    <CardWrapper 
+    <CardWrapper
       to={to}
       onClick={onClick}
       className={`bg-white border border-slate-200 rounded-[2rem] p-6 flex flex-col justify-between transition-all hover:border-blue-400/50 shadow-sm group ${onClick || to ? 'cursor-pointer active:scale-[0.98]' : ''}`}
@@ -61,8 +61,8 @@ const Dashboard = () => {
   useEffect(() => {
     const load = async () => {
       const [v, p, a, f] = await Promise.all([
-        DB.getVisits(), 
-        DB.getPatients(), 
+        DB.getVisits(),
+        DB.getPatients(),
         DB.getAppointments(),
         DB.getFamilies()
       ]);
@@ -74,7 +74,7 @@ const Dashboard = () => {
     window.addEventListener('emr-db-update', load);
     return () => window.removeEventListener('emr-db-update', load);
   }, []);
-  
+
   const stats = useMemo(() => {
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
@@ -83,7 +83,7 @@ const Dashboard = () => {
 
     // Temporal Filtering Logic
     const getDaysLimit = (range: TimeRange) => {
-      switch(range) {
+      switch (range) {
         case 'Week': return 7;
         case 'Month': return 30;
         case 'Quarter': return 90;
@@ -95,8 +95,8 @@ const Dashboard = () => {
     const daysLimit = getDaysLimit(timeRange);
     const filterDate = new Date();
     filterDate.setDate(now.getDate() - daysLimit);
-    
-    const filteredVisits = timeRange === 'Day' 
+
+    const filteredVisits = timeRange === 'Day'
       ? visits.filter(v => v.date.startsWith(todayStr))
       : visits.filter(v => new Date(v.date) >= filterDate);
 
@@ -149,20 +149,6 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-10 pb-20 max-w-[1600px] mx-auto animate-in fade-in duration-500">
-      {/* Sync Banner */}
-      {!isUpToDate && (
-        <div className="mx-2 p-5 bg-blue-50 border border-blue-100 rounded-[2rem] flex flex-col md:flex-row md:items-center justify-between gap-4 animate-pulse">
-           <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg"><CloudUpload size={20} /></div>
-              <div>
-                 <h4 className="text-[11px] font-black text-blue-900 uppercase tracking-tight">Clinical Sync Pending</h4>
-                 <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest opacity-70">Pushing local records to the cloud is recommended for security.</p>
-              </div>
-           </div>
-           <Link to="/cloud" className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md">Start Cloud Push</Link>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 px-2 border-b border-slate-100 pb-8">
         <div>
@@ -195,68 +181,68 @@ const Dashboard = () => {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 px-2">
-        <StatCard 
-          title={`Throughput (${timeRange})`} 
-          value={stats.periodEncounters} 
-          subtitle="Encounter Registry" 
-          icon={UserCheck} 
-          colorClass="bg-blue-50 text-blue-600" 
+        <StatCard
+          title={`Throughput (${timeRange})`}
+          value={stats.periodEncounters}
+          subtitle="Encounter Registry"
+          icon={UserCheck}
+          colorClass="bg-blue-50 text-blue-600"
           to={`/reports/history?range=${timeRange}`}
         />
-        <StatCard 
-          title="Total Receivable" 
-          value={`₹${stats.totalOutstanding}`} 
-          subtitle="Outstanding" 
-          icon={Clock} 
-          colorClass="bg-rose-50 text-rose-600" 
+        <StatCard
+          title="Total Receivable"
+          value={`₹${stats.totalOutstanding}`}
+          subtitle="Outstanding"
+          icon={Clock}
+          colorClass="bg-rose-50 text-rose-600"
           to="/reports/financial"
         />
-        <StatCard 
-          title={`${timeRange} Collections`} 
-          value={`₹${stats.periodRev}`} 
-          subtitle="Revenue Streams" 
-          icon={Wallet} 
-          colorClass="bg-emerald-50 text-emerald-600" 
+        <StatCard
+          title={`${timeRange} Collections`}
+          value={`₹${stats.periodRev}`}
+          subtitle="Revenue Streams"
+          icon={Wallet}
+          colorClass="bg-emerald-50 text-emerald-600"
           to="/reports/day-wise-revenue"
         />
-        <StatCard 
-          title={`Patients (${timeRange})`} 
-          value={stats.periodUniquePatients} 
-          subtitle="Distinct Lives" 
-          icon={BarChart3} 
-          colorClass="bg-indigo-50 text-indigo-600" 
+        <StatCard
+          title={`Patients (${timeRange})`}
+          value={stats.periodUniquePatients}
+          subtitle="Distinct Lives"
+          icon={BarChart3}
+          colorClass="bg-indigo-50 text-indigo-600"
           to="/patients"
         />
-        <StatCard 
-          title="Household Networks" 
-          value={stats.totalFamilies} 
-          subtitle="Family Groups" 
-          icon={Network} 
-          colorClass="bg-purple-50 text-purple-600" 
-          to="/families" 
+        <StatCard
+          title="Household Networks"
+          value={stats.totalFamilies}
+          subtitle="Family Groups"
+          icon={Network}
+          colorClass="bg-purple-50 text-purple-600"
+          to="/families"
         />
       </div>
 
       {/* MAIN EQUAL WIDTH GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-2">
-        
+
         {/* CLINICAL SCHEDULE */}
         <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm flex flex-col h-[600px] w-full overflow-hidden">
           <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between shrink-0">
             <div className="flex items-center space-x-3"><CalendarCheck size={18} className="text-blue-600" /><h2 className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Clinical Schedule</h2></div>
             <div className="flex bg-slate-200/50 p-1 rounded-full border border-slate-200">
-               <button 
+              <button
                 onClick={() => setScheduleTab('today')}
                 className={`inline-flex items-center px-4 py-1.5 rounded-full transition-all text-[8px] font-black uppercase tracking-tighter ${scheduleTab === 'today' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-300/30'}`}
-               >
-                 <span className="mr-1.5">{stats.todayQueue.length}</span> TODAY
-               </button>
-               <button 
+              >
+                <span className="mr-1.5">{stats.todayQueue.length}</span> TODAY
+              </button>
+              <button
                 onClick={() => setScheduleTab('tomorrow')}
                 className={`inline-flex items-center px-4 py-1.5 rounded-full transition-all text-[8px] font-black uppercase tracking-tighter ml-1 ${scheduleTab === 'tomorrow' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-300/30'}`}
-               >
-                 <span className="mr-1.5">{stats.tomorrowQueue.length}</span> TOMORROW
-               </button>
+              >
+                <span className="mr-1.5">{stats.tomorrowQueue.length}</span> TOMORROW
+              </button>
             </div>
           </div>
           <div className="p-6 flex-1 space-y-4 overflow-y-auto custom-scrollbar">
@@ -337,7 +323,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="relative z-10 pt-6 mt-auto border-t border-white/5">
-             <Link to="/reports/quality" className="inline-flex items-center text-[10px] font-black text-blue-400 hover:text-white uppercase tracking-[0.2em] transition-all group/link">Audit Registry <ArrowRight size={14} className="ml-3 group-hover/link:translate-x-2 transition-transform" /></Link>
+            <Link to="/reports/quality" className="inline-flex items-center text-[10px] font-black text-blue-400 hover:text-white uppercase tracking-[0.2em] transition-all group/link">Audit Registry <ArrowRight size={14} className="ml-3 group-hover/link:translate-x-2 transition-transform" /></Link>
           </div>
           <Stethoscope size={300} className="absolute -right-20 -bottom-20 opacity-5 pointer-events-none" />
         </div>
@@ -347,6 +333,6 @@ const Dashboard = () => {
   );
 };
 
-const ArrowRight = ({ size, className }: any) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>;
+const ArrowRight = ({ size, className }: any) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>;
 
 export default Dashboard;

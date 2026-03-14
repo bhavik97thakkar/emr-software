@@ -26,7 +26,6 @@ const SyncHub = () => {
   const toast = useToast();
   const [syncStatus, setSyncStatus] = useState<any>(DB.getSyncStatus());
   const [stats, setStats] = useState<any>(null);
-  const [isPulling, setIsPulling] = useState(false);
   const [aiAudit, setAiAudit] = useState<string | null>(null);
   const [isAuditing, setIsAuditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -42,17 +41,6 @@ const SyncHub = () => {
     window.addEventListener('emr-db-update', loadData);
     return () => window.removeEventListener('emr-db-update', loadData);
   }, []);
-
-  const handleCloudPull = async () => {
-    setIsPulling(true);
-    const success = await DB.syncCloudToLocal();
-    setIsPulling(false);
-    if (success) {
-      toast.success("Cloud Pull successful. Registry refreshed.");
-    } else {
-      toast.error("Pull failed. Ensure internet connection.");
-    }
-  };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -97,16 +85,6 @@ const SyncHub = () => {
             Clinic Intelligence Infrastructure
           </p>
         </div>
-        <div className="flex space-x-3">
-          <button
-            onClick={handleCloudPull}
-            disabled={isPulling}
-            className="px-6 py-4 rounded-2xl bg-white border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center space-x-2 shadow-sm disabled:opacity-50"
-          >
-            {isPulling ? <Loader2 size={18} className="animate-spin" /> : <CloudDownload size={18} className="text-blue-600" />}
-            <span>Pull from Cloud</span>
-          </button>
-        </div>
       </div>
 
 
@@ -128,7 +106,7 @@ const SyncHub = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
                 <StatItem label="Used Memory" val={`${stats?.sizeMB || '0.00'} MB`} icon={HardDrive} />
                 <StatItem label="Patient Records" val={stats?.patientCount || 0} icon={Database} />
-                <StatItem label="Sync Status" val={isUpToDate ? "Synced" : "Dirty"} icon={Globe} />
+                <StatItem label="Sync Engine" val="Auto-Sync" icon={Globe} />
               </div>
 
 
@@ -156,11 +134,11 @@ const SyncHub = () => {
 
         <div className="space-y-6">
           <div className="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm text-center">
-            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${isUpToDate ? 'bg-emerald-50' : 'bg-amber-50'}`}>
-              {isUpToDate ? <CheckCircle2 size={40} className="text-emerald-500" /> : <RefreshCw size={40} className="text-amber-500 animate-[spin_4s_linear_infinite]" />}
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${isUpToDate ? 'bg-emerald-50' : 'bg-blue-50'}`}>
+              {isUpToDate ? <CheckCircle2 size={40} className="text-emerald-500" /> : <RefreshCw size={40} className="text-blue-500 animate-[spin_4s_linear_infinite]" />}
             </div>
             <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight font-serif-clinical">
-              {isUpToDate ? 'Cloud Connected' : 'Changes Pending'}
+              {isUpToDate ? 'Cloud Connected' : 'Auto-Syncing...'}
             </h3>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-2 leading-relaxed">
               Your data is stored locally for maximum speed. All changes automatically sync to the cloud every 30 seconds.
