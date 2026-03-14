@@ -524,6 +524,7 @@ const FamilyModal = ({
 };
 
 const PatientProfile = () => {
+  const toast = useToast();
   const { mobile } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -682,12 +683,23 @@ const PatientProfile = () => {
               <h1 className="text-lg md:text-xl font-black text-slate-900 tracking-tight flex items-center font-serif-clinical">
                 {patient.name}
                 <button onClick={() => setIsEditingProfile(true)} className="ml-3 p-1.5 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit Profile"><Edit2 size={14} /></button>
-                <button onClick={async () => {
-                  if (window.confirm("Are you sure you want to permanently delete this patient and all their medical records? This cannot be undone.")) {
-                    await DB.deletePatient(patient.mobile);
-                    navigate('/patients');
-                  }
-                }} className="ml-1 p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Delete Profile"><Trash2 size={14} /></button>
+                <div className="relative group/delete">
+                  <button
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to permanently delete this patient and all their medical records? This cannot be undone.")) {
+                        DB.deletePatient(patient.mobile).then(() => {
+                          toast.success("Patient record deleted successfully");
+                          navigate('/');
+                        });
+                      }
+                    }}
+                    className="ml-1 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg transition-all flex items-center space-x-2 border border-rose-100 opacity-30 hover:opacity-100 group-hover/delete:opacity-100"
+                    title="Delete Profile"
+                  >
+                    <Trash2 size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Delete Patient</span>
+                  </button>
+                </div>
               </h1>
               {totalDues > 0 && <span className="bg-rose-50 text-rose-600 text-[8px] font-black px-1.5 py-0.5 rounded border border-rose-100 uppercase tracking-widest">Awaiting Payment</span>}
             </div>
