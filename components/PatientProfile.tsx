@@ -589,12 +589,20 @@ const PatientProfile = () => {
   }, [mobile, navigate, searchParams, refreshData]);
 
   useEffect(() => {
-    if (isAddingVisit || editingVisit) {
+    if (editingVisit) {
       setTimeout(() => {
         consultationFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     }
-  }, [isAddingVisit, editingVisit]);
+  }, [editingVisit]);
+
+  const handleRecordVisitClick = () => {
+    setEditingVisit(null);
+    setIsAddingVisit(true);
+    setTimeout(() => {
+      consultationFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   const totalDues = useMemo(() => {
     return visits.filter(v => v.paymentStatus === 'Pending').reduce((sum, v) => sum + v.amount, 0);
@@ -689,7 +697,7 @@ const PatientProfile = () => {
         </div>
         <div className="flex space-x-2 w-full md:w-auto">
           <button onClick={() => { setEditingAppointment(null); setIsScheduling(true); }} className="flex-1 md:flex-none flex items-center justify-center space-x-2 bg-white border-2 border-slate-900 text-slate-900 px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] transition-all active:scale-95"><CalendarCheck size={18} /><span>Schedule</span></button>
-          <button onClick={() => { setEditingVisit(null); setIsAddingVisit(true); }} className="flex-[1.5] md:flex-none flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-blue-100 active:scale-95"><Plus size={18} /><span>Record Visit</span></button>
+          <button onClick={handleRecordVisitClick} className="flex-[1.5] md:flex-none flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-blue-100 active:scale-95"><Plus size={18} /><span>Record Visit</span></button>
         </div>
       </div>
 
@@ -699,7 +707,7 @@ const PatientProfile = () => {
             <HistoryIcon size={18} className="mr-3 text-indigo-600" />
             Past Medical History & chronic Records
           </h3>
-          <button onClick={() => setIsAddingVisit(true)} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><Edit2 size={14} /></button>
+          <button onClick={handleRecordVisitClick} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><Edit2 size={14} /></button>
         </div>
         <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
