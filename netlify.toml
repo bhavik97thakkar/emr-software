@@ -9,10 +9,10 @@
   status = 200
 
 [context.production]
-  environment = { VITE_API_URL = "https://emr-aarti-backend.onrender.com/api" }
+  environment = { VITE_API_URL = "https://medcore-emr-backend.onrender.com/api" }
 
 [context.deploy-preview]
-  environment = { VITE_API_URL = "https://emr-aarti-backend.onrender.com/api" }
+  environment = { VITE_API_URL = "https://medcore-emr-backend.onrender.com/api" }
 
 [context.branch-deploy]
-  environment = { VITE_API_URL = "https://emr-aarti-backend.onrender.com/api" }
+  environment = { VITE_API_URL = "https://medcore-emr-backend.onrender.com/api" }
