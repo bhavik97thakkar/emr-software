@@ -7,13 +7,7 @@ const app = express();
 
 // CORS Configuration for deployment
 const corsOptions = {
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://127.0.0.1:5173',
-    'https://emr-aarti.netlify.app',
-    'https://*.netlify.app'
-  ],
+  origin: true, // Reflects the requesting origin
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
