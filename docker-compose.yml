@@ -1,0 +1,65 @@
+# MedCore EMR — Docker Compose
+# Use this for LOCAL TESTING of the full stack before deploying to EasyPanel.
+# EasyPanel manages its own containers — this file is for local dev/testing only.
+#
+# Usage:
+#   docker-compose up --build
+#   Then open http://localhost
+#
+# Stop:
+#   docker-compose down
+
+version: '3.9'
+
+services:
+
+  # ── MongoDB ───────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: medcore-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: medrecordpro
+    volumes:
+      - mongo_data:/data/db
+    # NOT exposed externally — only accessible within Docker network
+    networks:
+      - medcore-net
+
+  # ── Express Backend ───────────────────────────────────────
+  medcore-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medcore-backend
+    restart: unless-stopped
+    environment:
+      PORT: 5000
+      MONGODB_URI: mongodb://mongo:27017/medrecordpro
+    depends_on:
+      - mongo
+    networks:
+      - medcore-net
+    # Not exposed externally — Nginx proxies to it
+
+  # ── React Frontend + Nginx ────────────────────────────────
+  medcore-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: medcore-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"      # HTTP — open to host
+    depends_on:
+      - medcore-backend
+    networks:
+      - medcore-net
+
+networks:
+  medcore-net:
+    driver: bridge
+
+volumes:
+  mongo_data:
+    driver: local

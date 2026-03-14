@@ -1,0 +1,545 @@
+# MedRecord Pro — Database Reference Guide
+
+> **Database:** MongoDB Atlas (Cloud)
+> **ODM:** Mongoose (Node.js)
+> **Total Collections:** 8
+> **Architecture:** Normalized, multi-collection with explicit FK references and compound indexes
+
+---
+
+## Table of Contents
+
+1. [Collections Overview](#1-collections-overview)
+2. [Entity-Relationship Diagram](#2-entity-relationship-diagram)
+3. [Foreign Key Map](#3-foreign-key-map)
+4. [Subdocument Schemas](#4-subdocument-schemas-shared)
+5. [Collection Details](#5-collection-details)
+   - [5.1 configs](#51-configs)
+   - [5.2 patients](#52-patients)
+   - [5.3 families](#53-families)
+   - [5.4 visits](#54-visits)
+   - [5.5 appointments](#55-appointments)
+   - [5.6 reports](#56-reports)
+   - [5.7 customdiagnoses](#57-customdiagnoses)
+   - [5.8 templates](#58-templates)
+6. [Index Reference](#6-index-reference)
+7. [Sync API Overview](#7-sync-api-overview)
+8. [Cascade Delete Rules](#8-cascade-delete-rules)
+9. [Normalization Notes](#9-normalization-notes)
+10. [Sample Documents](#10-sample-documents)
+
+---
+
+## 1. Collections Overview
+
+| # | Collection | PK Field | Role | Has FK Out? | Has FK In? |
+|---|---|---|---|---|---|
+| 1 | `configs` | `email` | Clinic / doctor login & settings | ❌ | ❌ |
+| 2 | `patients` | `mobile` | Core patient demographics | ✅ `familyId` | ✅ (visits, appointments, reports, families) |
+| 3 | `families` | [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | Groups of linked patients | ✅ `members[].mobile` | ✅ `patients.familyId` |
+| 4 | `visits` | [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | Clinical encounter records | ✅ `patientMobile`, `reportIds[]` | ❌ |
+| 5 | `appointments` | [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | Scheduled patient appointments | ✅ `patientMobile` | ❌ |
+| 6 | `reports` | [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | Uploaded lab/imaging files | ✅ `patientMobile` | ✅ `visits.reportIds[]` |
+| 7 | `customdiagnoses` | `name` | User-defined diagnosis terms | ❌ | ❌ |
+| 8 | `templates` | `diagnosis` | Preset diagnosis + medicine templates | ❌ | ❌ |
+
+---
+
+## 2. Entity-Relationship Diagram
+
+```
+┌─────────────┐        ┌─────────────────────────────────────────────────┐
+│   configs   │        │                    patients                      │
+│─────────────│        │─────────────────────────────────────────────────│
+│ email  (PK) │        │ mobile        (PK)                               │
+│ password    │        │ name                                             │
+│ clinicName  │        │ age, dob, gender, bloodGroup                     │
+│ address     │        │ address, area, city, state, pin, country         │
+│ phone       │        │ email, allergyOther, allergyMedicine             │
+│ isActive    │        │ habits {smoke, alcohol, drugAbuse}               │
+└─────────────┘        │ referredBy, createdDate, pastHistoryNotes        │
+                       │ familyId      (FK → families.id)  ─────────────┐│
+                       └──────────────────────────────────────────────┬─┘│
+                                    │                                  │  │
+             ┌──────────────────────┼──────────────────────┐          │  │
+             │                      │                      │          │  │
+             ▼                      ▼                      ▼          │  │
+     ┌────────────────┐   ┌─────────────────┐   ┌──────────────────┐ │  │
+     │     visits     │   │  appointments   │   │     reports      │ │  │
+     │────────────────│   │─────────────────│   │──────────────────│ │  │
+     │ id        (PK) │   │ id         (PK) │   │ id          (PK) │ │  │
+     │ patientMobile  │   │ patientMobile   │   │ patientMobile    │ │  │
+     │  (FK→patients) │   │  (FK→patients)  │   │  (FK→patients)   │ │  │
+     │ date           │   │ date            │   │ type             │ │  │
+     │ diagnosis      │   │ time            │   │ description      │ │  │
+     │ medicines[]    │   │ reason          │   │ date             │ │  │
+     │  └─Medicine{}  │   │ status          │   │ fileName         │ │  │
+     │ reportsOrdered │   └─────────────────┘   │ fileData (Base64)│ │  │
+     │ reportIds[]    │──────────────────────────►                  │ │  │
+     │  (FK→reports)  │        links to          └──────────────────┘ │  │
+     │ amount         │                                               │  │
+     │ paymentMethod  │                                               │  │
+     │ paymentStatus  │                                               │  │
+     │ prescriptionNt │                                               │  │
+     │ vitals{}       │                                               │  │
+     │  └─Vitals{}    │                                               │  │
+     └────────────────┘                                               │  │
+                                                                      │  │
+     ┌──────────────────────────────────────────────────────────────┐ │  │
+     │                         families                             │◄┘  │
+     │──────────────────────────────────────────────────────────────│    │
+     │ id           (PK)                                            │◄───┘
+     │ name                                                         │
+     │ members[]    (FK array → patients.mobile)                    │
+     │  └─ { mobile (FK), relationship }                            │
+     └──────────────────────────────────────────────────────────────┘
+
+     ┌─────────────────────┐      ┌─────────────────────────────────────┐
+     │  customdiagnoses    │      │           templates                  │
+     │─────────────────────│      │─────────────────────────────────────│
+     │ name (PK)           │      │ diagnosis       (PK)                 │
+     │                     │      │ defaultMedicines[]                   │
+     │ (standalone lookup) │      │  └─ Medicine{}  (same subdoc)        │
+     └─────────────────────┘      │ defaultReports[]                     │
+                                  │ (standalone lookup/preset table)     │
+                                  └─────────────────────────────────────┘
+```
+
+---
+
+## 3. Foreign Key Map
+
+| Source Collection | Source Field | Target Collection | Target Field | Cardinality | Required? |
+|---|---|---|---|---|---|
+| `patients` | `familyId` | `families` | [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | Many → One | ❌ Optional |
+| `families` | `members[].mobile` | `patients` | `mobile` | Many → Many | ✅ Required |
+| `visits` | `patientMobile` | `patients` | `mobile` | Many → One | ✅ Required |
+| `visits` | `reportIds[]` | `reports` | [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | Many → Many | ❌ Optional |
+| `appointments` | `patientMobile` | `patients` | `mobile` | Many → One | ✅ Required |
+| `reports` | `patientMobile` | `patients` | `mobile` | Many → One | ✅ Required |
+
+> **Note:** MongoDB does not enforce FK constraints at the engine level.
+> Referential integrity is enforced by the server's [validateForeignKeys()](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) function
+> (runs on every push-sync, logs warnings for orphaned records).
+
+---
+
+## 4. Subdocument Schemas (Shared)
+
+These are typed schemas embedded **inside** other documents. They are not standalone collections.
+
+### 4.1 Medicine
+*Used in: `Visit.medicines[]` and `Template.defaultMedicines[]`*
+
+| Field | Type | Description |
+|---|---|---|
+| [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | String | App-generated medicine ID |
+| `name` | String | Drug name — **required** |
+| `dosage` | String | e.g. `"500mg"` |
+| `frequency` | String | e.g. `"1-0-1"` (morning/afternoon/night) |
+| `duration` | Number | Number of days |
+| `instructions` | String | e.g. `"Take with food"` |
+
+> `_id` is suppressed — medicines are identified by [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) within the app.
+
+---
+
+### 4.2 Vitals
+*Used in: `Visit.vitals`*
+
+| Field | Type | Unit | Description |
+|---|---|---|---|
+| `weight` | Number | kg | Body weight |
+| `height` | Number | cm | Height |
+| `bmi` | Number | — | Body Mass Index |
+| `temp` | Number | °F | Body temperature |
+| `pulse` | Number | bpm | Heart rate |
+| `bp_sys` | Number | mmHg | Systolic blood pressure |
+| `bp_dia` | Number | mmHg | Diastolic blood pressure |
+| `spo2` | Number | % | Oxygen saturation |
+| `respRate` | Number | breaths/min | Respiratory rate |
+
+---
+
+### 4.3 FamilyMember
+*Used in: `Family.members[]`*
+
+| Field | Type | Description |
+|---|---|---|
+| `mobile` | String | **FK → patients.mobile** |
+| `relationship` | String | e.g. `"Spouse"`, `"Child"`, `"Self"` |
+
+---
+
+## 5. Collection Details
+
+---
+
+### 5.1 `configs`
+
+> Stores clinic/doctor credentials and settings. One document per clinic.
+
+| Field | Type | Constraint | Description |
+|---|---|---|---|
+| `email` | String | **PK**, Required, Unique | Login email / doctor identifier |
+| `password` | String | Required | Login password (plain text — consider hashing) |
+| `clinicName` | String | Default: `"MedRecord Pro Clinic"` | Display name |
+| `address` | String | — | Clinic physical address |
+| `phone` | String | — | Clinic contact number |
+| `isActive` | Boolean | Default: `true` | Account active flag (used by auth middleware) |
+
+**Relationships:** None — fully standalone.
+**Seeding:** Auto-creates `dr.aarti@medcore.in` on first run if empty.
+
+---
+
+### 5.2 `patients`
+
+> Core entity. Every visit, appointment, and report links back to a patient via `mobile`.
+
+| Field | Type | Constraint | Description |
+|---|---|---|---|
+| `mobile` | String | **PK**, Required, Unique | Primary identifier — patient's mobile number |
+| `name` | String | — | Full name |
+| [age](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/services/db.ts#35-47) | Number | — | Age in years |
+| `dob` | String | — | Date of birth (ISO string) |
+| `gender` | String | Enum: `Male / Female / Other` | Biological gender |
+| `bloodGroup` | String | — | e.g. `"B+"` |
+| `occupation` | String | — | Patient's occupation |
+| `address` | String | — | Street/building address |
+| `area` | String | — | Locality / area |
+| `city` | String | — | City |
+| `state` | String | — | State |
+| [pin](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/services/db.ts#79-80) | String | — | Postal / ZIP code |
+| `country` | String | — | Country |
+| `email` | String | — | Patient email address |
+| `allergyOther` | String | — | Non-medicine allergies |
+| `allergyMedicine` | String | — | Medicine/drug allergies |
+| `habits.smoke` | String | — | Smoking habit |
+| `habits.alcohol` | String | — | Alcohol habit |
+| `habits.drugAbuse` | String | — | Drug abuse history |
+| `referredBy` | String | — | Referring doctor/source |
+| `createdDate` | String | — | Registration date (ISO string) |
+| `familyId` | String | **FK → families.id**, Nullable | Family group this patient belongs to |
+| `pastHistoryNotes` | String | — | Chronic history / past medical notes |
+| `updatedAt` | Date | Auto | Last modified timestamp |
+
+**Relationships:**
+- `familyId` → `families.id` *(optional — a patient may or may not be in a family group)*
+- Referenced by: `visits.patientMobile`, `appointments.patientMobile`, `reports.patientMobile`, `families.members[].mobile`
+
+---
+
+### 5.3 `families`
+
+> Groups related patients together (e.g. family units). A patient can belong to at most one family.
+
+| Field | Type | Constraint | Description |
+|---|---|---|---|
+| [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | String | **PK**, Required, Unique | App-generated family ID |
+| `name` | String | — | Optional family group name |
+| `members` | FamilyMember[] | — | Array of `{ mobile (FK), relationship }` |
+| `updatedAt` | Date | Auto | Last modified timestamp |
+
+**Relationships:**
+- `members[].mobile` → `patients.mobile` *(each member must be an existing patient)*
+- Referenced by: `patients.familyId`
+
+**Business Rules:**
+- A family must have at least 2 members to be meaningful. Families with ≤ 1 member are auto-deleted on cascade.
+- When a patient is deleted, they are removed from `members[]` in all families.
+
+---
+
+### 5.4 `visits`
+
+> Records a single clinical encounter (consultation). The richest document — contains embedded medicines, vitals, and billing.
+
+| Field | Type | Constraint | Description |
+|---|---|---|---|
+| [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | String | **PK**, Required, Unique | App-generated visit ID |
+| `patientMobile` | String | **FK → patients.mobile**, Required | Which patient this visit belongs to |
+| [date](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/services/db.ts#199-205) | String | — | Visit date+time (ISO string) |
+| `diagnosis` | String | — | Primary diagnosis text |
+| `medicines` | Medicine[] | Subdoc array | Prescribed medicines *(see §4.1)* |
+| `reportsOrdered` | String[] | — | List of tests ordered (text, not uploaded files) |
+| `reportIds` | String[] | **FK[] → reports.id** | IDs of uploaded report files linked to this visit |
+| `amount` | Number | — | Consultation / billing amount (₹) |
+| `paymentMethod` | String | Enum: `Cash / GPay / UPI / Card / Due Payment` | How the patient paid |
+| `paymentStatus` | String | Enum: `Paid / Pending` | Payment settlement status |
+| `prescriptionNotes` | String | — | General instructions for the prescription |
+| `vitals` | Vitals | Subdoc | Clinical measurements *(see §4.2)* |
+| `updatedAt` | Date | Auto | Last modified timestamp |
+
+**Relationships:**
+- `patientMobile` → `patients.mobile` *(required — every visit must belong to a patient)*
+- `reportIds[]` → `reports.id` *(optional — links uploaded files to this visit)*
+
+---
+
+### 5.5 `appointments`
+
+> Scheduled future appointments. Separate from visits (appointments are bookings; visits are completed encounters).
+
+| Field | Type | Constraint | Description |
+|---|---|---|---|
+| [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | String | **PK**, Required, Unique | App-generated appointment ID |
+| `patientMobile` | String | **FK → patients.mobile**, Required | Which patient this appointment is for |
+| [date](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/services/db.ts#199-205) | String | — | Appointment date (`YYYY-MM-DD`) |
+| `time` | String | — | Appointment time (`HH:MM`) |
+| `reason` | String | — | Reason / chief complaint |
+| `status` | String | Enum: `Scheduled / Completed / Missed / Cancelled` | Current appointment status |
+| `updatedAt` | Date | Auto | Last modified timestamp |
+
+**Relationships:**
+- `patientMobile` → `patients.mobile` *(required)*
+
+---
+
+### 5.6 `reports`
+
+> Uploaded medical files (labs, X-rays, prescriptions, past records). Stored as Base64.
+
+| Field | Type | Constraint | Description |
+|---|---|---|---|
+| [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | String | **PK**, Required, Unique | App-generated report ID |
+| `patientMobile` | String | **FK → patients.mobile**, Required | Which patient this report belongs to |
+| `type` | String | Enum: `Lab / Xray / Prescription / Other / Past Record` | Report category |
+| `description` | String | — | Report description / summary |
+| [date](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/services/db.ts#199-205) | String | — | Report date (ISO string) |
+| `fileName` | String | — | Original uploaded file name |
+| `fileData` | String | — | Base64-encoded file content |
+| `updatedAt` | Date | Auto | Last modified timestamp |
+
+**Relationships:**
+- `patientMobile` → `patients.mobile` *(required)*
+- Referenced by: `visits.reportIds[]` *(a visit can link to multiple reports)*
+
+> ⚠️ `fileData` stores Base64 content — large files can significantly increase document size. The server uses `express.json({ limit: '100mb' })` to accommodate this.
+
+---
+
+### 5.7 `customdiagnoses`
+
+> A user-maintained lookup table of custom diagnosis names not in the default list.
+
+| Field | Type | Constraint | Description |
+|---|---|---|---|
+| `name` | String | **PK**, Required, Unique | The diagnosis term (e.g. `"Plantar Fasciitis"`) |
+| `updatedAt` | Date | Auto | Last modified timestamp |
+
+**Relationships:** None — fully standalone lookup table.
+
+> **Frontend note:** The frontend stores these as a plain `string[]`. The server converts to/from `{ name }` documents transparently.
+
+---
+
+### 5.8 `templates`
+
+> Preset treatment templates. When a doctor selects a diagnosis, the template auto-fills medicines and reports to order.
+
+| Field | Type | Constraint | Description |
+|---|---|---|---|
+| `diagnosis` | String | **PK**, Required, Unique | Diagnosis name (the template key) |
+| `defaultMedicines` | Medicine[] | Subdoc array | Pre-filled medicines *(same schema as Visit.medicines[])* |
+| `defaultReports` | String[] | — | Pre-filled list of tests to order |
+| `updatedAt` | Date | Auto | Last modified timestamp |
+
+**Relationships:** None — standalone preset table.
+
+---
+
+## 6. Index Reference
+
+| Collection | Index Fields | Type | Purpose |
+|---|---|---|---|
+| `configs` | `email` | Unique | PK lookup |
+| `patients` | `mobile` | Unique | PK lookup |
+| `patients` | `familyId` | Single | FK lookup — find patients in a family |
+| `patients` | `name, mobile` | Compound | Search / list sorting |
+| `families` | [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | Unique | PK lookup |
+| `families` | `members.mobile` | Single | Find which family a patient belongs to |
+| `visits` | [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | Unique | PK lookup |
+| `visits` | `patientMobile` | Single | FK lookup — all visits for a patient |
+| `visits` | `patientMobile, date` | Compound DESC | Patient history (most frequent query) |
+| `visits` | [date](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/services/db.ts#199-205) | Single DESC | Daily/date-range queries |
+| `appointments` | [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | Unique | PK lookup |
+| `appointments` | `patientMobile` | Single | FK lookup — patient's appointments |
+| `appointments` | [date](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/services/db.ts#199-205) | Single | Calendar/schedule views |
+| `appointments` | `date, status` | Compound | Today's scheduled appointments |
+| `reports` | [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) | Unique | PK lookup |
+| `reports` | `patientMobile` | Single | FK lookup — patient's reports |
+| `reports` | `patientMobile, date` | Compound DESC | Patient report timeline |
+| `customdiagnoses` | `name` | Unique | PK lookup |
+| `templates` | `diagnosis` | Unique | PK lookup |
+
+---
+
+## 7. Sync API Overview
+
+The frontend uses a **local-first architecture** — all data lives in `localStorage` and syncs to MongoDB periodically.
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/health` | ❌ | Server + DB status check |
+| `POST` | `/api/auth/login` | ❌ | Authenticate and get session token |
+| `GET` | `/api/sync/pull-all` | ✅ | Download all data from MongoDB → localStorage |
+| `POST` | `/api/sync/push-all` | ✅ | Upload all localStorage data → MongoDB |
+| `GET` | `/api/patients/:mobile` | ✅ | Fetch one patient + all linked records |
+| `DELETE` | `/api/patients/:mobile` | ✅ | Cascade delete patient + all linked records |
+
+### Push-All — FK Processing Order
+
+```
+1. patients       ← saved first (root entity, no dependencies)
+2. families       ← saved second (members[] reference patients)
+3. visits         ┐
+4. appointments   ├── saved in parallel (all depend on patients)
+5. reports        ┘
+6. templates      ┐
+7. customdiagnoses┘── saved in parallel (standalone, no FK deps)
+```
+
+### FK Validation on Push
+
+On every push, the server runs [validateForeignKeys()](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) which checks:
+- Every `visit.patientMobile` exists in patients
+- Every `appointment.patientMobile` exists in patients
+- Every `report.patientMobile` exists in patients
+- Every `family.members[].mobile` exists in patients
+
+Violations are **logged as warnings** (non-fatal) and returned in the response as `{ warnings: [...] }`.
+
+---
+
+## 8. Cascade Delete Rules
+
+When `DELETE /api/patients/:mobile` is called:
+
+```
+patients.mobile = X  →  DELETE patient document
+visits.patientMobile = X  →  DELETE all visits
+appointments.patientMobile = X  →  DELETE all appointments
+reports.patientMobile = X  →  DELETE all reports
+families.members[].mobile = X  →  PULL (remove) from members array
+families with ≤ 1 member remaining  →  DELETE orphaned family
+```
+
+---
+
+## 9. Normalization Notes
+
+### First Normal Form (1NF) ✅
+All fields are atomic. Arrays (`medicines[]`, `reportIds[]`, `members[]`) hold homogeneous typed items via subdocument schemas.
+
+### Second Normal Form (2NF) ✅
+No partial dependencies — every non-key attribute depends on the full primary key of its collection.
+
+### Third Normal Form (3NF) ✅
+No transitive dependencies:
+- Patient address fields (`city`, `state`) are patient-specific attributes, not a normalized city/state master table — acceptable at this clinic scale.
+- `habits` is patient-specific embedded object — no separate habits table needed.
+- `medicines[]` in visits are **prescription instances** (not a shared drug catalogue) — embedding is correct.
+- `vitals` is visit-specific — embedding is correct.
+- `templates` acts as the medicine/report catalogue concept.
+
+### Why not use ObjectId references?
+The app uses **business keys** as primary keys:
+- `mobile` for patients (staff know and type patient phone numbers)
+- Frontend-generated [id](file:///c:/Users/bhavi/Desktop/bhavik%20docs/Digitifi/works/emr%20software/server.js#281-321) strings for visits/appointments/reports
+
+Changing to ObjectId PKs would require significant frontend rewrites. The current string-based keys with explicit `ref` declarations and compound indexes provide equivalent query performance at this data scale.
+
+---
+
+## 10. Sample Documents
+
+### Patient
+```json
+{
+  "mobile": "9876543210",
+  "name": "Ramesh Patel",
+  "age": 45,
+  "gender": "Male",
+  "bloodGroup": "B+",
+  "city": "Pune",
+  "allergyMedicine": "Penicillin",
+  "habits": { "smoke": "Non-smoker", "alcohol": "Occasional" },
+  "familyId": "fam_abc123",
+  "createdDate": "2025-01-15T10:30:00.000Z",
+  "pastHistoryNotes": "Hypertension since 2019, on medication"
+}
+```
+
+### Visit
+```json
+{
+  "id": "visit_xyz789",
+  "patientMobile": "9876543210",
+  "date": "2025-06-01T11:00:00.000Z",
+  "diagnosis": "Hypertension - Follow Up",
+  "medicines": [
+    {
+      "id": "med_001",
+      "name": "Amlodipine",
+      "dosage": "5mg",
+      "frequency": "0-0-1",
+      "duration": 30,
+      "instructions": "Take at night with water"
+    }
+  ],
+  "reportsOrdered": ["CBC", "Lipid Profile"],
+  "reportIds": ["rep_001"],
+  "amount": 300,
+  "paymentMethod": "GPay",
+  "paymentStatus": "Paid",
+  "vitals": {
+    "weight": 78,
+    "bp_sys": 138,
+    "bp_dia": 88,
+    "pulse": 76
+  }
+}
+```
+
+### Family
+```json
+{
+  "id": "fam_abc123",
+  "name": "Patel Family",
+  "members": [
+    { "mobile": "9876543210", "relationship": "Self" },
+    { "mobile": "9876543211", "relationship": "Spouse" },
+    { "mobile": "9876543212", "relationship": "Child" }
+  ]
+}
+```
+
+### Appointment
+```json
+{
+  "id": "apt_001",
+  "patientMobile": "9876543210",
+  "date": "2025-06-15",
+  "time": "10:30",
+  "reason": "BP Check",
+  "status": "Scheduled"
+}
+```
+
+### Template
+```json
+{
+  "diagnosis": "Hypertension",
+  "defaultMedicines": [
+    {
+      "name": "Amlodipine",
+      "dosage": "5mg",
+      "frequency": "0-0-1",
+      "duration": 30,
+      "instructions": "Take at night"
+    }
+  ],
+  "defaultReports": ["Renal Function Test", "ECG", "Lipid Profile"]
+}
+```

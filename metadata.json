@@ -1,0 +1,9 @@
+{
+  "name": "MedRecord Pro - Clinic EMR",
+  "description": "A comprehensive Electronic Medical Records (EMR) system for general physicians featuring smart diagnosis templates, family grouping, prescription printing, and financial tracking.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
