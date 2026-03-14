@@ -146,7 +146,7 @@ const Sidebar = ({ isOpen, toggle, isCollapsed, onToggleCollapse, currentUser, o
         <NavLink to="/families" icon={<Users size={20} />} label="Families" onClick={toggle} isCollapsed={isCollapsed} />
         <NavLink to="/reports" icon={<BarChart4 size={20} />} label="Analytics" onClick={toggle} isCollapsed={isCollapsed} />
         <NavLink to="/diagnosis-master" icon={<Settings size={20} />} label="Templates" onClick={toggle} isCollapsed={isCollapsed} />
-        <NavLink to="/cloud" icon={<Cloud size={20} className={isUpToDate ? "text-emerald-500" : "text-amber-500"} />} label="Cloud" onClick={toggle} isCollapsed={isCollapsed} />
+        <NavLink to="/cloud" icon={<Cloud size={20} className={isUpToDate ? "text-emerald-500" : "text-blue-400"} />} label="Cloud" onClick={toggle} isCollapsed={isCollapsed} />
       </nav>
 
       <div className="absolute bottom-0 w-full border-t border-white/5 bg-[#050912]/80 backdrop-blur-xl">

@@ -26,6 +26,7 @@ const SyncHub = () => {
   const toast = useToast();
   const [syncStatus, setSyncStatus] = useState<any>(DB.getSyncStatus());
   const [stats, setStats] = useState<any>(null);
+  const [isPulling, setIsPulling] = useState(false);
   const [aiAudit, setAiAudit] = useState<string | null>(null);
   const [isAuditing, setIsAuditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,6 +42,17 @@ const SyncHub = () => {
     window.addEventListener('emr-db-update', loadData);
     return () => window.removeEventListener('emr-db-update', loadData);
   }, []);
+
+  const handleCloudPull = async () => {
+    setIsPulling(true);
+    const success = await DB.syncCloudToLocal();
+    setIsPulling(false);
+    if (success) {
+      toast.success("Cloud Pull successful. Registry refreshed.");
+    } else {
+      toast.error("Pull failed. Ensure internet connection.");
+    }
+  };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,6 +96,16 @@ const SyncHub = () => {
             <Server size={14} className="mr-2 text-blue-600" />
             Clinic Intelligence Infrastructure
           </p>
+        </div>
+        <div className="flex space-x-3">
+          <button
+            onClick={handleCloudPull}
+            disabled={isPulling}
+            className="px-6 py-4 rounded-2xl bg-white border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center space-x-2 shadow-sm disabled:opacity-50"
+          >
+            {isPulling ? <Loader2 size={18} className="animate-spin" /> : <CloudDownload size={18} className="text-blue-600" />}
+            <span>Pull from Cloud</span>
+          </button>
         </div>
       </div>
 
