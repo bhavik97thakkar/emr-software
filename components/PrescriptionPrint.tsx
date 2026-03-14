@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Printer, Phone, Mail, MapPin, Stethoscope, MessageCircle, Share2, Check, Send, Share } from 'lucide-react';
 import { Patient, Visit } from '../types';
+import { useToast } from '../context/ToastContext';
 
 interface PrescriptionPrintProps {
   patient: Patient;
@@ -19,13 +20,14 @@ const WhatsAppShareModal = ({
   onClose: () => void,
   onConfirm: (number: string) => void
 }) => {
+  const toast = useToast();
   const [phoneNumber, setPhoneNumber] = useState(patient.mobile || '');
 
   const handleSend = () => {
     if (phoneNumber.trim().length >= 10) {
       onConfirm(phoneNumber.trim());
     } else {
-      alert("Please enter a valid 10-digit mobile number.");
+      toast.error("Please enter a valid 10-digit mobile number.");
     }
   };
 

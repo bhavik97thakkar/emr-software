@@ -32,6 +32,7 @@ import { DB } from '../services/db';
 import { PAYMENT_METHODS, GLOBAL_DIAGNOSES } from '../constants';
 import { GoogleGenAI } from "@google/genai";
 import VoiceInput from './VoiceInput';
+import { useToast } from '../context/ToastContext';
 
 interface VisitFormProps {
   patient: Patient;
@@ -59,6 +60,7 @@ const MEDICINE_INSTRUCTIONS = [
 
 const VisitForm: React.FC<VisitFormProps> = ({ patient, onSave, onCancel, initialVisit }) => {
   const isEditing = !!initialVisit?.id;
+  const toast = useToast();
   const [diagnosis, setDiagnosis] = useState(initialVisit?.diagnosis || '');
   const [medicines, setMedicines] = useState<Medicine[]>(initialVisit?.medicines || []);
   const [reportsOrdered, setReportsOrdered] = useState<string[]>(initialVisit?.reportsOrdered || []);
@@ -168,6 +170,12 @@ const VisitForm: React.FC<VisitFormProps> = ({ patient, onSave, onCancel, initia
 
   const handleSave = async (shouldPrint: boolean = false) => {
     if (isSaving) return;
+
+    if (!diagnosis.trim() && medicines.length === 0 && !prescriptionNotes.trim() && reportsOrdered.length === 0) {
+      toast.error('Cannot save empty consultation. Please add a diagnosis, medicine, test, or note.');
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -194,7 +202,7 @@ const VisitForm: React.FC<VisitFormProps> = ({ patient, onSave, onCancel, initia
     } catch (err) {
       console.error("Save error:", err);
       setIsSaving(false);
-      alert("An error occurred while saving the record. Please check your connection.");
+      toast.error("An error occurred while saving the record. Please check your connection.");
     }
   };
 
@@ -449,10 +457,10 @@ const VisitForm: React.FC<VisitFormProps> = ({ patient, onSave, onCancel, initia
                       <button key={idx} type="button" onClick={() => applySuggestion(s)} className="w-full text-left px-6 py-4 hover:bg-blue-50/50 flex items-center justify-between group transition-all border-b border-slate-50 last:border-none">
                         <div className="flex items-center space-x-4">
                           <div className={`p-2 rounded-xl ${s.source === 'template' ? 'bg-blue-100 text-blue-600' :
-                              s.source === 'custom' ? 'bg-indigo-600 text-white' :
-                                s.source === 'history' ? 'bg-slate-100 text-slate-500' :
-                                  s.source === 'ai' ? 'bg-purple-100 text-purple-600' :
-                                    'bg-slate-50 text-slate-400'
+                            s.source === 'custom' ? 'bg-indigo-600 text-white' :
+                              s.source === 'history' ? 'bg-slate-100 text-slate-500' :
+                                s.source === 'ai' ? 'bg-purple-100 text-purple-600' :
+                                  'bg-slate-50 text-slate-400'
                             }`}>
                             {s.source === 'template' ? <Save size={16} /> :
                               s.source === 'custom' ? <BookOpen size={16} /> :

@@ -6,12 +6,14 @@ import { Patient, Visit } from '../types';
 import VisitForm from './VisitForm';
 import { GENDERS } from '../constants';
 import VoiceInput from './VoiceInput';
+import { useToast } from '../context/ToastContext';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 const NewVisit = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [patientData, setPatientData] = useState<Partial<Patient>>({
     mobile: searchParams.get('mobile') || '',
@@ -84,11 +86,21 @@ const NewVisit = () => {
     setPatientData({ ...patientData, dob: dobVal, age: calculateAge(dobVal) });
   };
 
+  const handleProceedToConsultation = () => {
+    if (!patientData.mobile?.toString().trim() || !patientData.name?.trim() || !patientData.age || patientData.age <= 0) {
+      toast.error('Please fill out Name, Mobile, and Age before proceeding');
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    setActiveTab('consultation');
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const handleSaveVisit = async (visitParams: Visit, shouldPrint: boolean = false) => {
     if (isSubmitting) return;
 
-    if (!patientData.mobile || !patientData.name || patientData.age === undefined) {
-      alert("Please fill essential patient details (Mobile, Name, Age)");
+    if (!patientData.mobile?.toString().trim() || !patientData.name?.trim() || !patientData.age || patientData.age <= 0) {
+      toast.error("Please fill essential patient details (Mobile, Name, Age)");
       formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
@@ -107,7 +119,7 @@ const NewVisit = () => {
       }
     } catch (err) {
       console.error("Registration error:", err);
-      alert("Registration failed. Please try again.");
+      toast.error("Registration failed. Please try again.");
       setIsSubmitting(false);
       return;
     }
@@ -115,10 +127,11 @@ const NewVisit = () => {
     try {
       const finalVisit = { ...visitParams, patientMobile: registeredPatient.mobile };
       await DB.saveVisit(finalVisit);
+      toast.success("Encounter saved successfully!");
       navigate(`/patient/${registeredPatient.mobile}${shouldPrint ? '?print=true' : ''}`);
     } catch (err) {
       setIsSubmitting(false);
-      alert("Error saving visit details.");
+      toast.error("Error saving visit details.");
     }
   };
 
@@ -140,7 +153,7 @@ const NewVisit = () => {
           1. Patient Profile
         </button>
         <button
-          onClick={() => setActiveTab('consultation')}
+          onClick={handleProceedToConsultation}
           className={`pb-4 text-sm font-black uppercase tracking-wider transition-all border-b-2 ${activeTab === 'consultation' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-700 hover:border-slate-300'}`}
         >
           2. Consultation
@@ -309,7 +322,7 @@ const NewVisit = () => {
               </div>
             </div>
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end shrink-0">
-              <button type="button" onClick={() => { setActiveTab('consultation'); formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="px-8 py-3 bg-slate-900 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200 flex items-center">
+              <button type="button" onClick={handleProceedToConsultation} className="px-8 py-3 bg-slate-900 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200 flex items-center">
                 Proceed to Consultation <ArrowRight size={16} className="ml-2" />
               </button>
             </div>

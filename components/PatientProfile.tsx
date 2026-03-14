@@ -42,6 +42,7 @@ import { Patient, Visit, Report, Family, Appointment } from '../types';
 import VisitForm from './VisitForm';
 import PrescriptionPrint from './PrescriptionPrint';
 import { RELATIONSHIPS, GENDERS } from '../constants';
+import { useToast } from '../context/ToastContext';
 
 const AppointmentModal = ({
   patientMobile,
@@ -63,6 +64,7 @@ const AppointmentModal = ({
     status: initialAppointment?.status || 'Scheduled'
   });
 
+  const toast = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const isEdit = !!initialAppointment;
 
@@ -79,7 +81,7 @@ const AppointmentModal = ({
       onClose();
     } catch (err) {
       setIsSaving(false);
-      alert("Error saving appointment. Check connection.");
+      toast.error("Error saving appointment. Check connection.");
     }
   };
 
@@ -439,17 +441,18 @@ const FamilyModal = ({
   onClose: () => void,
   onRefresh: () => void
 }) => {
+  const toast = useToast();
   const [mobile, setMobile] = useState('');
   const [relationship, setRelationship] = useState('Relative');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleLink = async () => {
     if (mobile.length !== 10) {
-      alert("Please enter a valid 10-digit mobile number.");
+      toast.error("Please enter a valid 10-digit mobile number.");
       return;
     }
     if (mobile === primaryMobile) {
-      alert("Cannot link a patient to themselves.");
+      toast.error("Cannot link a patient to themselves.");
       return;
     }
 
@@ -460,7 +463,7 @@ const FamilyModal = ({
       onClose();
     } catch (err) {
       console.error(err);
-      alert("An error occurred while linking family member.");
+      toast.error("An error occurred while linking family member.");
     } finally {
       setIsProcessing(false);
     }
