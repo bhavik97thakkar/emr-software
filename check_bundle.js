@@ -1,7 +1,7 @@
 
 const https = require('https');
 
-https.get('https://emr-software.netlify.app/assets/index-DeCn3jrU.js', (res) => {
+https.get('https://emr-software.netlify.app/assets/index-D_OZBfbK.js', (res) => {
   let data = '';
   res.on('data', (chunk) => { data += chunk; });
   res.on('end', () => {

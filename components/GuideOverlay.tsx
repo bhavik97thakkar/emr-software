@@ -45,20 +45,35 @@ const GuideOverlay: React.FC<GuideOverlayProps> = ({ steps, onComplete, onClose,
         const rect = el.getBoundingClientRect();
         setTargetRect(rect);
         
-        const padding = 20;
-        const cardWidth = 350;
-        const cardHeight = 220; 
-        
-        // Default positioning: below the target
-        let top = rect.bottom + padding;
-        let left = rect.left + (rect.width / 2) - (cardWidth / 2);
+        const padding = 16;
+        const cardWidth = 340;
+        const cardHeight = 240;
 
-        // Flip to top if bottom is cut off
-        if (top + cardHeight > window.innerHeight) {
-          top = rect.top - cardHeight - padding;
+        let top: number;
+        let left: number;
+
+        const targetCenterX = rect.left + rect.width / 2;
+        const isOnLeftSide = targetCenterX < window.innerWidth * 0.35;
+        const isOnRightSide = targetCenterX > window.innerWidth * 0.65;
+
+        if (isOnLeftSide) {
+          // Target is in the left sidebar → place card to the RIGHT
+          left = rect.right + padding;
+          top = rect.top + rect.height / 2 - cardHeight / 2;
+        } else if (isOnRightSide) {
+          // Target is on the right → place card to the LEFT
+          left = rect.left - cardWidth - padding;
+          top = rect.top + rect.height / 2 - cardHeight / 2;
+        } else {
+          // Target is in the center → place BELOW, flip to top if needed
+          left = rect.left + rect.width / 2 - cardWidth / 2;
+          top = rect.bottom + padding;
+          if (top + cardHeight > window.innerHeight) {
+            top = rect.top - cardHeight - padding;
+          }
         }
-        
-        // Keep within window bounds
+
+        // Clamp within viewport
         left = Math.max(padding, Math.min(left, window.innerWidth - cardWidth - padding));
         top = Math.max(padding, Math.min(top, window.innerHeight - cardHeight - padding));
 
@@ -69,7 +84,7 @@ const GuideOverlay: React.FC<GuideOverlayProps> = ({ steps, onComplete, onClose,
           width: `${cardWidth}px`,
           zIndex: 1100,
           pointerEvents: 'auto',
-          transition: 'all 0.3s ease-out'
+          transition: 'top 0.3s ease-out, left 0.3s ease-out'
         });
 
         // Ensure visibility
