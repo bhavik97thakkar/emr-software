@@ -471,7 +471,13 @@ const App = () => {
           <div className="bg-white p-10 rounded-[2.5rem] w-full max-w-sm text-center shadow-2xl">
             <h3 className="text-xl font-black font-serif-clinical">Exit Clinical Session?</h3>
             <div className="mt-8 space-y-3">
-              <button onClick={() => { DB.logout(); setCurrentUser(null); setShowLogoutConfirm(false); }} className="w-full py-4 bg-rose-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest">Confirm Sign Out</button>
+              <button onClick={() => { 
+                DB.logout(); 
+                setCurrentUser(null); 
+                setShowLogoutConfirm(false); 
+                // Reset guide so it shows again on next login
+                localStorage.removeItem('medcore_guide_global');
+              }} className="w-full py-4 bg-rose-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest">Confirm Sign Out</button>
               <button onClick={() => setShowLogoutConfirm(false)} className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-[11px] uppercase tracking-widest">Cancel</button>
             </div>
           </div>
