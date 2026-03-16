@@ -159,7 +159,7 @@ const Sidebar = ({ isOpen, toggle, isCollapsed, onToggleCollapse, currentUser, o
           title="Clinical Walkthrough"
         >
           <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
-          {!isCollapsed && <span className="text-[9px] font-black uppercase tracking-[0.2em]">Clinical Guide</span>}
+          {!isCollapsed && <span className="text-[9px] font-black uppercase tracking-[0.2em]">✨ Clinical Guide</span>}
         </button>
       </div>
 
@@ -297,7 +297,7 @@ const App = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-slate-50 flex">
+      <div className="min-h-screen bg-[#fcfaf7] flex">
           <Sidebar
             isOpen={isSidebarOpen}
             toggle={() => setIsSidebarOpen(!isSidebarOpen)}
