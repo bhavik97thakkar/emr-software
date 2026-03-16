@@ -389,26 +389,29 @@ const App = () => {
 
   // Integrated Walkthrough Auto-Trigger System
   const location = useLocation();
+  // Integrated Walkthrough Auto-Trigger System
   useEffect(() => {
-    const pathGuideMap: Record<string, string> = {
-      '/': 'dashboard',
-      '/patient/': 'profile',
-      '/new-visit': 'visit',
-      '/cloud': 'cloud'
-    };
+    if (!currentUser) return;
 
-    const path = location.pathname;
-    let guideKey = '';
-
-    if (path === '/') guideKey = 'dashboard';
-    else if (path.startsWith('/patient/')) guideKey = 'profile';
-    else if (path === '/new-visit') guideKey = 'visit';
-    else if (path === '/cloud') guideKey = 'cloud';
-
-    if (guideKey && !localStorage.getItem(`medcore_guide_${guideKey}`)) {
-      setActiveGuide(guideKey);
+    // 1. Check for first-time global orientation
+    if (!localStorage.getItem('medcore_guide_global')) {
+      setActiveGuide('global');
+      return;
     }
-  }, [location.pathname]);
+
+    // 2. Fallback to contextual guides based on path
+    const path = location.pathname;
+    let contextGuideKey = '';
+
+    if (path === '/') contextGuideKey = 'dashboard';
+    else if (path.startsWith('/patient/')) contextGuideKey = 'profile';
+    else if (path === '/new-visit') contextGuideKey = 'visit';
+    else if (path === '/cloud') contextGuideKey = 'cloud';
+
+    if (contextGuideKey && !localStorage.getItem(`medcore_guide_${contextGuideKey}`)) {
+      setActiveGuide(contextGuideKey);
+    }
+  }, [location.pathname, !!currentUser]);
 
   if (!currentUser) return <Login onLoginSuccess={(user) => { seedDemoData(); DB.markDataChanged(); setCurrentUser(user); }} />;
 
