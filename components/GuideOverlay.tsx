@@ -29,9 +29,11 @@ const GuideOverlay: React.FC<GuideOverlayProps> = ({ steps, onComplete, onClose,
     const element = document.querySelector(step.target === 'sidebar' ? `.${step.target}` : `.${step.target}`);
     // Support both direct class match and descriptive selector
     const el = document.querySelector(`.${step.target}`) || document.querySelector(step.target);
+    console.log(`[GuideOverlay] Step: ${step.title}, Target: ${step.target}, Found: ${!!el}`);
     
     if (el) {
       const rect = el.getBoundingClientRect();
+      console.log(`[GuideOverlay] Rect:`, rect);
       setTargetRect(rect);
       
       // Calculate Card Position
