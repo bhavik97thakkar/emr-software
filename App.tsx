@@ -154,7 +154,7 @@ const Sidebar = ({ isOpen, toggle, isCollapsed, onToggleCollapse, currentUser, o
         </nav>
 
         <div className="px-4 mt-4">
-          <button 
+          <button
             onClick={() => {
               console.log("[Sidebar] Starting Guide...");
               onStartGuide('global');
@@ -301,7 +301,7 @@ const App = () => {
         target: 'tour-sidebar-cloud',
         route: '/cloud',
         title: '🔒 Your Private Cloud Vault',
-        description: "Patient data is stored on a dedicated Hostinger KVM-2 server — not shared infrastructure. Only you hold the access keys. Check your sync status and connectivity from here."
+        description: "Patient data is stored on a dedicated Private Cloud server — not shared infrastructure. Only you hold the access keys. Check your sync status and connectivity from here."
       },
       {
         target: 'clinical-guide-button',
@@ -399,7 +399,7 @@ const App = () => {
 
     const path = location.pathname;
     let guideKey = '';
-    
+
     if (path === '/') guideKey = 'dashboard';
     else if (path.startsWith('/patient/')) guideKey = 'profile';
     else if (path === '/new-visit') guideKey = 'visit';
@@ -415,73 +415,73 @@ const App = () => {
   return (
     <>
       <div className="min-h-screen bg-[#fcfaf7] flex">
-          <Sidebar
-            isOpen={isSidebarOpen}
-            toggle={() => setIsSidebarOpen(!isSidebarOpen)}
-            isCollapsed={isCollapsed}
-            onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-            currentUser={currentUser}
-            onLogoutRequest={() => setShowLogoutConfirm(true)}
-            syncStatus={syncStatus}
-            onStartGuide={setActiveGuide}
-          />
-          <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
-            <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 h-20 flex items-center px-8 justify-between no-print shadow-sm">
-              <button onClick={() => setIsSidebarOpen(true)} className="p-2 md:hidden text-slate-600 hover:text-slate-900 transition-colors"><Menu size={24} /></button>
-              <div className="flex-1 flex justify-center md:justify-start"><div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hidden lg:block">MedCore Clinical Terminal v4.2</div></div>
-              <div className="flex items-center space-x-6">
-                <ConnectivityBadge />
-                <Link to="/new-visit" className="encounter-entry flex items-center space-x-3 bg-[#050912] text-white px-7 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all">
-                  <PlusCircle size={18} /><span>Encounter Entry</span>
-                </Link>
-              </div>
-            </header>
-            <NetworkAlertBanner />
-            <div className="p-6 md:p-10 flex-1 overflow-y-auto">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/patients" element={<PatientList />} />
-                <Route path="/families" element={<FamilyList />} />
-                <Route path="/patient/:mobile" element={<PatientProfile />} />
-                <Route path="/new-visit" element={<NewVisit />} />
-                <Route path="/reports" element={<ReportsHub />} />
-                <Route path="/reports/lab" element={<LabResultsReport />} />
-                <Route path="/reports/history" element={<ClinicalHistoryReport />} />
-                <Route path="/reports/quality" element={<QualityReport />} />
-                <Route path="/reports/financial" element={<FinancialLedgerReport />} />
-                <Route path="/reports/settlement" element={<SettlementAnalysisReport />} />
-                <Route path="/reports/day-wise-revenue" element={<DayWiseRevenueReport />} />
-                <Route path="/reports/prevalence" element={<DiseasePrevalenceReport />} />
-                <Route path="/reports/retention" element={<PatientRetentionReport />} />
-                <Route path="/reports/demographics" element={<DemographicPersonaReport />} />
-                <Route path="/reports/medication" element={<MedicationFrequencyReport />} />
-                <Route path="/reports/referral" element={<ReferralSourceReport />} />
-                <Route path="/diagnosis-master" element={<DiagnosisMaster />} />
-                <Route path="/cloud" element={<SyncHub />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+        <Sidebar
+          isOpen={isSidebarOpen}
+          toggle={() => setIsSidebarOpen(!isSidebarOpen)}
+          isCollapsed={isCollapsed}
+          onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+          currentUser={currentUser}
+          onLogoutRequest={() => setShowLogoutConfirm(true)}
+          syncStatus={syncStatus}
+          onStartGuide={setActiveGuide}
+        />
+        <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
+          <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 h-20 flex items-center px-8 justify-between no-print shadow-sm">
+            <button onClick={() => setIsSidebarOpen(true)} className="p-2 md:hidden text-slate-600 hover:text-slate-900 transition-colors"><Menu size={24} /></button>
+            <div className="flex-1 flex justify-center md:justify-start"><div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hidden lg:block">MedCore Clinical Terminal v4.2</div></div>
+            <div className="flex items-center space-x-6">
+              <ConnectivityBadge />
+              <Link to="/new-visit" className="encounter-entry flex items-center space-x-3 bg-[#050912] text-white px-7 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all">
+                <PlusCircle size={18} /><span>Encounter Entry</span>
+              </Link>
             </div>
-          </main>
-        </div>
-        {showLogoutConfirm && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-            <div className="bg-white p-10 rounded-[2.5rem] w-full max-w-sm text-center shadow-2xl">
-              <h3 className="text-xl font-black font-serif-clinical">Exit Clinical Session?</h3>
-              <div className="mt-8 space-y-3">
-                <button onClick={() => { DB.logout(); setCurrentUser(null); setShowLogoutConfirm(false); }} className="w-full py-4 bg-rose-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest">Confirm Sign Out</button>
-                <button onClick={() => setShowLogoutConfirm(false)} className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-[11px] uppercase tracking-widest">Cancel</button>
-              </div>
+          </header>
+          <NetworkAlertBanner />
+          <div className="p-6 md:p-10 flex-1 overflow-y-auto">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/patients" element={<PatientList />} />
+              <Route path="/families" element={<FamilyList />} />
+              <Route path="/patient/:mobile" element={<PatientProfile />} />
+              <Route path="/new-visit" element={<NewVisit />} />
+              <Route path="/reports" element={<ReportsHub />} />
+              <Route path="/reports/lab" element={<LabResultsReport />} />
+              <Route path="/reports/history" element={<ClinicalHistoryReport />} />
+              <Route path="/reports/quality" element={<QualityReport />} />
+              <Route path="/reports/financial" element={<FinancialLedgerReport />} />
+              <Route path="/reports/settlement" element={<SettlementAnalysisReport />} />
+              <Route path="/reports/day-wise-revenue" element={<DayWiseRevenueReport />} />
+              <Route path="/reports/prevalence" element={<DiseasePrevalenceReport />} />
+              <Route path="/reports/retention" element={<PatientRetentionReport />} />
+              <Route path="/reports/demographics" element={<DemographicPersonaReport />} />
+              <Route path="/reports/medication" element={<MedicationFrequencyReport />} />
+              <Route path="/reports/referral" element={<ReferralSourceReport />} />
+              <Route path="/diagnosis-master" element={<DiagnosisMaster />} />
+              <Route path="/cloud" element={<SyncHub />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </main>
+      </div>
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="bg-white p-10 rounded-[2.5rem] w-full max-w-sm text-center shadow-2xl">
+            <h3 className="text-xl font-black font-serif-clinical">Exit Clinical Session?</h3>
+            <div className="mt-8 space-y-3">
+              <button onClick={() => { DB.logout(); setCurrentUser(null); setShowLogoutConfirm(false); }} className="w-full py-4 bg-rose-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest">Confirm Sign Out</button>
+              <button onClick={() => setShowLogoutConfirm(false)} className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-[11px] uppercase tracking-widest">Cancel</button>
             </div>
           </div>
-        )}
-        {activeGuide && (
-          <GuideOverlay 
-            guideKey={activeGuide}
-            steps={GUIDES[activeGuide] || []}
-            onClose={() => setActiveGuide(null)}
-            onComplete={() => setActiveGuide(null)}
-          />
-        )}
+        </div>
+      )}
+      {activeGuide && (
+        <GuideOverlay
+          guideKey={activeGuide}
+          steps={GUIDES[activeGuide] || []}
+          onClose={() => setActiveGuide(null)}
+          onComplete={() => setActiveGuide(null)}
+        />
+      )}
     </>
   );
 };
