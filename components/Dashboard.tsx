@@ -227,7 +227,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-2">
 
         {/* CLINICAL SCHEDULE */}
-        <div className="clinical-schedule bg-white border border-slate-200 rounded-[2.5rem] shadow-sm flex flex-col h-[600px] w-full overflow-hidden">
+        <div className="clinical-schedule tour-dashboard-schedule bg-white border border-slate-200 rounded-[2.5rem] shadow-sm flex flex-col h-[600px] w-full overflow-hidden">
           <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between shrink-0">
             <div className="flex items-center space-x-3"><CalendarCheck size={18} className="text-blue-600" /><h2 className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Clinical Schedule</h2></div>
             <div className="flex bg-slate-200/50 p-1 rounded-full border border-slate-200">
@@ -300,7 +300,7 @@ const Dashboard = () => {
         </div>
 
         {/* CASE FREQUENCY */}
-        <div className="case-frequency bg-#050912 rounded-[2.5rem] p-10 text-white shadow-2xl h-[600px] flex flex-col relative overflow-hidden w-full">
+        <div className="case-frequency tour-dashboard-intelligence bg-teal-900 rounded-[2.5rem] p-10 text-white shadow-2xl h-[600px] flex flex-col relative overflow-hidden w-full">
           <div className="relative z-10 space-y-10 flex-1">
             <div>
               <h3 className="text-3xl font-black font-serif-clinical italic leading-tight">Case Frequency</h3>

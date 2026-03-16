@@ -143,13 +143,13 @@ const Sidebar = ({ isOpen, toggle, isCollapsed, onToggleCollapse, currentUser, o
       </div>
 
       <nav className="p-4 space-y-2">
-        <NavLink to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" onClick={toggle} isCollapsed={isCollapsed} />
-        <NavLink to="/new-visit" icon={<UserPlus size={20} />} label="New Patient" onClick={toggle} isCollapsed={isCollapsed} />
-        <NavLink to="/patients" icon={<User size={20} />} label="Patients" onClick={toggle} isCollapsed={isCollapsed} />
-        <NavLink to="/families" icon={<Users size={20} />} label="Families" onClick={toggle} isCollapsed={isCollapsed} />
-        <NavLink to="/reports" icon={<BarChart4 size={20} />} label="Analytics" onClick={toggle} isCollapsed={isCollapsed} />
-        <NavLink to="/diagnosis-master" icon={<Settings size={20} />} label="Templates" onClick={toggle} isCollapsed={isCollapsed} />
-        <NavLink to="/cloud" icon={<Cloud size={20} className={isUpToDate ? "text-emerald-500" : "text-blue-400"} />} label="Cloud" onClick={toggle} isCollapsed={isCollapsed} />
+        <NavLink to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-dashboard" />
+        <NavLink to="/new-visit" icon={<UserPlus size={20} />} label="New Patient" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-newpatient" />
+        <NavLink to="/patients" icon={<User size={20} />} label="Patients" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-patients" />
+        <NavLink to="/families" icon={<Users size={20} />} label="Families" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-families" />
+        <NavLink to="/reports" icon={<BarChart4 size={20} />} label="Analytics" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-analytics" />
+        <NavLink to="/diagnosis-master" icon={<Settings size={20} />} label="Templates" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-templates" />
+        <NavLink to="/cloud" icon={<Cloud size={20} className={isUpToDate ? "text-emerald-500" : "text-blue-400"} />} label="Cloud" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-cloud" />
       </nav>
 
       <div className="px-4 mt-6">
@@ -210,11 +210,11 @@ const NetworkAlertBanner = () => {
   );
 };
 
-const NavLink = ({ to, icon, label, onClick, isCollapsed }: { to: string, icon: React.ReactNode, label: string, onClick: () => void, isCollapsed: boolean }) => {
+const NavLink = ({ to, icon, label, onClick, isCollapsed, tourClass }: { to: string, icon: React.ReactNode, label: string, onClick: () => void, isCollapsed: boolean, tourClass?: string }) => {
   const location = useLocation();
   const isActive = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
   return (
-    <Link to={to} onClick={onClick} className={`flex items-center transition-all group rounded-2xl p-3.5 ${isActive ? 'bg-blue-600 text-white shadow-xl shadow-blue-900/30' : 'hover:bg-white/5 text-slate-400 hover:text-white'} ${isCollapsed ? 'justify-center' : 'space-x-5'}`}>
+    <Link to={to} onClick={onClick} className={`flex items-center transition-all group rounded-2xl p-3.5 ${tourClass || ''} ${isActive ? 'bg-blue-600 text-white shadow-xl shadow-blue-900/30' : 'hover:bg-white/5 text-slate-400 hover:text-white'} ${isCollapsed ? 'justify-center' : 'space-x-5'}`}>
       <div className={`shrink-0 transition-transform group-hover:scale-110 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-400'}`}>{icon}</div>
       {!isCollapsed && <span className="text-[11px] font-bold uppercase tracking-[0.15em]">{label}</span>}
     </Link>
@@ -231,9 +231,14 @@ const App = () => {
 
   const GUIDES: Record<string, GuideStep[]> = {
     global: [
-      { target: 'sidebar', title: 'Clinical OS Navigation', description: 'Access patient records, analytics, and clinical templates from this high-performance sidebar.', position: 'right' },
-      { target: 'encounter-entry', title: 'Rapid Encounter Entry', description: 'Start a new clinical consultation instantly with AI-powered suggestions and voice-first vitals capture.', position: 'bottom' },
-      { target: 'connectivity', title: 'Cloud Sovereignty', description: 'Your data syncs automatically with your Hostinger Private Vault. Work offline; we handle the sync.', position: 'bottom' }
+      { target: 'tour-sidebar-dashboard', title: 'Clinic Command Centre', description: 'Monitor your practice heartbeat. Real-time patient flow, revenue trends, and schedule visibility.' },
+      { target: 'tour-sidebar-newpatient', title: 'Rapid Registration', description: 'Onboard new patients in seconds.demographics and quick-tags for efficient indexing.' },
+      { target: 'tour-sidebar-patients', title: 'Clinical Longitudinal Records', description: 'Access the complete medical history of any patient. Search by face, mobile, or name.' },
+      { target: 'tour-sidebar-families', title: 'Family Mapping', description: 'Group patients by household. Essential for understanding genetic risks and pediatric care.' },
+      { target: 'tour-sidebar-analytics', title: 'Disease Intelligence', description: 'Powerful data reporting. Track disease prevalence, pharmacy utilization, and clinic growth.' },
+      { target: 'tour-sidebar-templates', title: 'Smart Prescription Templates', description: 'Save hours. Setup common diagnosis patterns and medication sets for one-tap entry.' },
+      { target: 'tour-sidebar-cloud', title: 'Hostinger Private Cloud', description: 'Your data is sovereign. Monitor your cloud sync status and KVM-2 infrastructure health.' },
+      { target: 'encounter-entry', title: 'Consultation Start', description: 'Ready to see a patient? Start a high-performance visit session from here.' }
     ],
     dashboard: [
       { target: 'practice-command', title: 'Practice Command Centre', description: 'Your 360-degree clinical dashboard. Monitor revenue, patient flow, and epidemiological trends in real-time.', position: 'bottom' },

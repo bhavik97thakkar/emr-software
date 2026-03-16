@@ -796,7 +796,7 @@ const PatientProfile = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 no-print">
         {/* Encounter Ledger (Showing exact time) */}
-        <div className="lg:col-span-12 clinical-ledger">
+        <div className="lg:col-span-12 clinical-ledger tour-profile-ledger">
           <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
             <div className="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
               <h3 className="font-black text-slate-900 text-[10px] tracking-widest uppercase flex items-center">
