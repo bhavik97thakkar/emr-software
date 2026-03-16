@@ -237,32 +237,143 @@ const App = () => {
 
   const GUIDES: Record<string, GuideStep[]> = {
     global: [
-      { target: 'tour-sidebar-dashboard',   route: '/',               title: 'Clinic Command Centre',          description: 'Monitor your practice heartbeat. Real-time patient flow, revenue trends, and schedule visibility.' },
-      { target: 'tour-sidebar-newpatient',   route: '/new-visit',      title: 'Rapid Registration',              description: 'Onboard new patients in seconds. Capture demographics and clinical tags for efficient indexing.' },
-      { target: 'tour-sidebar-patients',     route: '/patients',       title: 'Clinical Longitudinal Records',   description: 'Access the complete medical history of any patient. Search by mobile number or name.' },
-      { target: 'tour-sidebar-families',     route: '/families',       title: 'Family Mapping',                  description: 'Group patients by household. Essential for understanding genetic risks and pediatric care.' },
-      { target: 'tour-sidebar-analytics',    route: '/reports',        title: 'Disease Intelligence',            description: 'Powerful data reporting. Track disease prevalence, pharmacy utilization, and clinic growth.' },
-      { target: 'tour-sidebar-templates',    route: '/diagnosis-master', title: 'Smart Prescription Templates', description: 'Save hours. Setup common diagnosis patterns and medication sets for one-tap entry.' },
-      { target: 'tour-sidebar-cloud',        route: '/cloud',          title: 'Hostinger Private Cloud',         description: 'Your data is sovereign. Monitor your cloud sync status and KVM-2 infrastructure health.' },
-      { target: 'encounter-entry',           route: '/',               title: 'Consultation Entry',              description: 'Ready to see a patient? Start a high-performance visit session from here.' }
+      {
+        target: 'tour-sidebar-dashboard',
+        route: '/',
+        title: '👋 Welcome to MedCore',
+        description: 'This is your Practice Command Centre — where your clinical day begins. Revenue, patient flow, and your schedule are visible right from this screen. No more switching between apps.'
+      },
+      {
+        target: 'practice-command',
+        route: '/',
+        title: 'Live Practice Intelligence',
+        description: 'These cards update in real time. Total patients seen today, pending dues, daily collections — everything you need to know at a glance, without asking your staff.'
+      },
+      {
+        target: 'tour-dashboard-schedule',
+        route: '/',
+        title: 'Your Clinical Queue',
+        description: "Today's appointments are listed here. You can see why a patient is visiting before they walk in. Tap any appointment to jump directly to their record."
+      },
+      {
+        target: 'tour-dashboard-intelligence',
+        route: '/',
+        title: 'Disease Pattern Insights',
+        description: "Your top diagnoses this month — automatically tracked. No manual entry. Use this to spot outbreaks early, monitor seasonal trends, and benchmark your clinic's health profile."
+      },
+      {
+        target: 'encounter-entry',
+        route: '/',
+        title: '⚡ Start a Consultation',
+        description: "This button opens a new patient visit. You'll capture vitals, symptoms, diagnosis, and prescription — all in one screen. Fast, structured, and printable."
+      },
+      {
+        target: 'tour-sidebar-newpatient',
+        route: '/new-visit',
+        title: 'Register a New Patient',
+        description: "First visit? Takes under 60 seconds. Enter the patient's name, mobile number, and date of birth. The system auto-generates their unique medical record number."
+      },
+      {
+        target: 'tour-sidebar-patients',
+        route: '/patients',
+        title: 'Full Patient Directory',
+        description: "Every patient you've ever seen, searchable by name or mobile number. Tap any patient to open their complete medical history — past visits, prescriptions, lab results, and notes."
+      },
+      {
+        target: 'tour-sidebar-families',
+        route: '/families',
+        title: 'Family Health Mapping',
+        description: "Group a mother, father, and children as one household. Invaluable for paediatric follow-ups, hereditary risk assessments, and spotting household-wide infections."
+      },
+      {
+        target: 'tour-sidebar-analytics',
+        route: '/reports',
+        title: 'Analytics & Clinical Reports',
+        description: "Generate reports for disease prevalence, revenue trends, pharmacy utilization, and patient retention. Built for doctors who want data — not spreadsheets."
+      },
+      {
+        target: 'tour-sidebar-templates',
+        route: '/diagnosis-master',
+        title: 'Prescription Templates',
+        description: "Save your most common treatment protocols once — e.g. 'Viral Fever + Paracetamol + ORS'. Apply them in one tap during a consultation. Saves 2–3 minutes per patient."
+      },
+      {
+        target: 'tour-sidebar-cloud',
+        route: '/cloud',
+        title: '🔒 Your Private Cloud Vault',
+        description: "Patient data is stored on a dedicated Hostinger KVM-2 server — not shared infrastructure. Only you hold the access keys. Check your sync status and connectivity from here."
+      },
+      {
+        target: 'clinical-guide-button',
+        route: '/',
+        title: "You're All Set, Doctor! 🎉",
+        description: "You've completed the MedCore orientation. Whenever you want to revisit any feature, click the Interactive Guide button in the sidebar. Your clinic, your data, your control."
+      }
     ],
     dashboard: [
-      { target: 'practice-command', route: '/',        title: 'Practice Command Centre', description: 'Your 360-degree clinical dashboard. Monitor revenue, patient flow, and epidemiological trends in real-time.' },
-      { target: 'tour-dashboard-schedule',   route: '/', title: 'Clinical Queue', description: 'Manage your daily appointments. See reason-for-visit at a glance and navigate to patient profiles instantly.' },
-      { target: 'tour-dashboard-intelligence', route: '/', title: 'Disease Intelligence', description: 'Visualize top diagnoses in your practice. Automatically tracks clinic quality and disease prevalence.' }
+      {
+        target: 'practice-command',
+        route: '/',
+        title: 'Practice Command Centre',
+        description: "Your clinic's live vital signs. Monitor revenue, active patients, household networks, and outstanding receivables — updated every time a visit is recorded."
+      },
+      {
+        target: 'tour-dashboard-schedule',
+        route: '/',
+        title: 'Clinical Appointment Queue',
+        description: 'Your day-view appointment calendar. Switch between Day, Week, and Month. Click any appointment to open the patient profile and prep for the consultation.'
+      },
+      {
+        target: 'tour-dashboard-intelligence',
+        route: '/',
+        title: 'Case Frequency Intelligence',
+        description: 'A visual breakdown of your most frequently diagnosed conditions this period. Spot trends, manage chronic disease load, and generate prevalence reports from here.'
+      }
     ],
     profile: [
-      { target: 'patient-sovereignty', title: 'Patient Sovereignty', description: 'Complete longitudinal medical record. Track vitals trends, family history, and past clinical encounters.' },
-      { target: 'tour-profile-ledger',  title: 'Clinical Ledger', description: 'A transparent record of every visit, diagnosis, and prescription ever issued to this patient.' }
+      {
+        target: 'patient-sovereignty',
+        route: '/',
+        title: 'Patient Health Sovereignty',
+        description: "This is the patient's complete longitudinal record. Every vital, every visit, every prescription — in one place. Search, filter, and review in seconds."
+      },
+      {
+        target: 'tour-profile-ledger',
+        route: '/',
+        title: 'Clinical Encounter Ledger',
+        description: 'A chronological log of every consultation this patient has had at your clinic. Tap any visit to review the full SOAP notes, diagnosis, and prescriptions issued.'
+      }
     ],
     visit: [
-      { target: 'vitals-ribbon',  title: 'Sticky Clinical Context', description: 'Active vitals stay pinned here, ensuring you never lose context while entering prescriptions.' },
-      { target: 'voice-terminal', title: 'AI Voice Terminal',       description: 'Enter clinical notes using natural language. Our AI extracts diagnoses and suggests medications automatically.' },
-      { target: 'allergy-alert',  title: 'High-Alert Safety',       description: 'Safety-first alerts pulse in Rose Pink to ensure you NEVER miss a critical medicine allergy during a visit.' }
+      {
+        target: 'vitals-ribbon',
+        title: 'Sticky Vitals Ribbon',
+        description: "The patient's active vitals — Weight, BP, SpO₂, Temperature — stay pinned to this bar as you scroll through the prescription. Critical context that should never leave your field of view."
+      },
+      {
+        target: 'voice-terminal',
+        title: 'AI Voice Terminal',
+        description: "Speak your clinical notes naturally. The AI transcribes, structures, and even suggests relevant diagnoses and medications — letting you focus on the patient, not the keyboard."
+      },
+      {
+        target: 'allergy-alert',
+        title: '⚠️ Allergy Safety Alert',
+        description: "If the patient has documented drug allergies, this panel pulses in rose-red to command your attention. It is the highest-priority alert on this screen — impossible to miss."
+      }
     ],
     cloud: [
-      { target: 'sync-hub',       route: '/cloud', title: 'Data Sovereignty Hub', description: 'Manage your private cloud connection. Hostinger KVM-2 ensures your patient data is under your exclusive control.' },
-      { target: 'registry-pulse', route: '/cloud', title: 'Registry Pulse',       description: 'Monitor live data transfer between your local terminal and your cloud vault.' }
+      {
+        target: 'sync-hub',
+        route: '/cloud',
+        title: 'Cloud Infrastructure Panel',
+        description: "Monitor your private server's connectivity, last sync timestamp, and data health. When the indicator is green, your data is continuously backed up to your dedicated Hostinger server."
+      },
+      {
+        target: 'registry-pulse',
+        route: '/cloud',
+        title: 'Registry Sync Pulse',
+        description: "This tracker shows the live count of patient records, visits, and prescriptions that have been successfully pushed to your cloud vault. Your safety net against data loss."
+      }
     ]
   };
 
