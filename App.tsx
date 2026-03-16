@@ -309,6 +309,7 @@ const App = () => {
             onStartGuide={setActiveGuide}
           />
           <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
+            <div className="bg-red-600 text-white text-center py-1 font-black text-[10px] uppercase tracking-widest z-[100] sticky top-0">Deployment Debug: High-Fidelity Walkthrough v2</div>
             <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 h-20 flex items-center px-8 justify-between no-print shadow-sm">
               <button onClick={() => setIsSidebarOpen(true)} className="p-2 md:hidden text-slate-600 hover:text-slate-900 transition-colors"><Menu size={24} /></button>
               <div className="flex-1 flex justify-center md:justify-start"><div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hidden lg:block">MedCore Clinical Terminal v4.2</div></div>
