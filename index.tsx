@@ -2,6 +2,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { HashRouter } from 'react-router-dom';
+import { ToastProvider } from './context/ToastContext';
 import { seedDemoData, DEMO_CREDENTIALS } from './services/demoSeed';
 
 // Expose comprehensive demo utilities to window
@@ -104,6 +106,10 @@ if (!rootElement) throw new Error("Could not find root element");
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <App />
+    <HashRouter>
+      <ToastProvider>
+        <App />
+      </ToastProvider>
+    </HashRouter>
   </React.StrictMode>
 );

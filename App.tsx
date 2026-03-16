@@ -291,9 +291,8 @@ const App = () => {
   if (!currentUser) return <Login onLoginSuccess={(user) => { seedDemoData(); DB.markDataChanged(); setCurrentUser(user); }} />;
 
   return (
-    <ToastProvider>
-      <HashRouter>
-        <div className="min-h-screen bg-slate-50 flex">
+    <>
+      <div className="min-h-screen bg-slate-50 flex">
           <Sidebar
             isOpen={isSidebarOpen}
             toggle={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -361,8 +360,7 @@ const App = () => {
             onComplete={() => setActiveGuide(null)}
           />
         )}
-      </HashRouter>
-    </ToastProvider>
+    </>
   );
 };
 export default App;
