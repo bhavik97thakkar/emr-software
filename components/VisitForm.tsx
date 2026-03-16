@@ -11,6 +11,8 @@ import {
   Image as ImageIcon,
   Printer,
   ChevronDown,
+  ChevronUp,
+  ChevronLeft,
   BookOpen,
   Sparkles,
   Loader2,
@@ -57,6 +59,24 @@ const MEDICINE_INSTRUCTIONS = [
   "Dissolve in water",
   "Apply locally"
 ];
+
+const CollapsibleSection = ({ title, icon: Icon, children, defaultOpen = true, colorClass = "slate" }: { title: string, icon: any, children: React.ReactNode, defaultOpen?: boolean, colorClass?: string }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className={`space-y-6 ${!isOpen ? 'bg-slate-50/50 p-4 rounded-3xl border border-slate-100' : ''} transition-all duration-300`}>
+      <div className={`flex items-center justify-between border-b-2 border-${colorClass}-900/20 pb-3 cursor-pointer`} onClick={() => setIsOpen(!isOpen)}>
+        <div className="flex items-center space-x-2">
+          <Icon size={18} className={`text-${colorClass}-600`} />
+          <label className={`text-[10px] font-bold text-${colorClass}-400 uppercase tracking-widest`}>{title}</label>
+        </div>
+        <button className="text-slate-400 hover:text-slate-600 transition-colors">
+          {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+      </div>
+      {isOpen && <div className="animate-in fade-in slide-in-from-top-2 duration-300">{children}</div>}
+    </div>
+  );
+};
 
 const VisitForm: React.FC<VisitFormProps> = ({ patient, onSave, onCancel, initialVisit }) => {
   const isEditing = !!initialVisit?.id;
@@ -300,7 +320,29 @@ const VisitForm: React.FC<VisitFormProps> = ({ patient, onSave, onCancel, initia
   const quickSelectTests = ["CBC", "FBS", "HbA1c", "ECG", "X-Ray Chest", "USG ABD", "LFT", "KFT"];
 
   return (
-    <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-300 w-full mx-auto flex flex-col no-print relative">
+    <div className="bg-[#fcfaf7] rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-300 w-full mx-auto flex flex-col no-print relative">
+      {/* Sticky Vitals Ribbon */}
+      <div className="vitals-ribbon sticky top-0 z-[110] bg-white/95 backdrop-blur-md border-b border-slate-200 px-8 py-3 flex items-center justify-between shadow-sm animate-in slide-in-from-top-full">
+        <div className="flex items-center space-x-6 overflow-x-auto no-scrollbar">
+          <div className="flex items-center space-x-2 shrink-0">
+             <Activity size={14} className="text-emerald-500" />
+             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Vitals</span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <StickyVital label="WT" value={vitals.weight} unit="kg" />
+            <StickyVital label="HT" value={vitals.height} unit="cm" />
+            <StickyVital label="BP" value={vitals.bp_sys && vitals.bp_dia ? `${vitals.bp_sys}/${vitals.bp_dia}` : undefined} />
+            <StickyVital label="P" value={vitals.pulse} unit="bpm" />
+            <StickyVital label="SPO2" value={vitals.spo2} unit="%" />
+          </div>
+        </div>
+        {(patient.allergyMedicine || patient.allergyOther) && (
+          <div className="allergy-alert flex items-center space-x-2 px-3 py-1.5 bg-rose-50 border border-rose-200 rounded-xl allergy-pulse">
+            <AlertCircle size={12} className="text-rose-600" />
+            <span className="text-[9px] font-black text-rose-700 uppercase tracking-tight">Allergy Alert</span>
+          </div>
+        )}
+      </div>
       {showDraftToast && (
         <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm px-4 animate-in slide-in-from-top-4">
           <div className="bg-slate-900 text-white p-6 rounded-[1.5rem] shadow-2xl border border-white/10 flex flex-col space-y-4">
@@ -342,13 +384,9 @@ const VisitForm: React.FC<VisitFormProps> = ({ patient, onSave, onCancel, initia
         </button>
       </div>
 
-      <div className="p-8 space-y-10 overflow-y-auto">
+      <div className="p-8 space-y-12 overflow-y-auto">
         {/* Past History Context */}
-        <div className="space-y-6">
-          <div className="flex items-center space-x-2 border-b-2 border-slate-900 pb-3">
-            <HistoryIcon size={18} className="text-indigo-600" />
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Past Medical History / Chronic Records</label>
-          </div>
+        <CollapsibleSection title="Past Medical History / Chronic Records" icon={HistoryIcon} colorClass="indigo" defaultOpen={!patient.pastHistoryNotes}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8">
               <VoiceInput
@@ -383,7 +421,7 @@ const VisitForm: React.FC<VisitFormProps> = ({ patient, onSave, onCancel, initia
               ))}
             </div>
           )}
-        </div>
+        </CollapsibleSection>
 
         {/* Current Ongoing Medications */}
         <div className="space-y-6 bg-amber-50/30 p-8 rounded-[2rem] border border-amber-100/50">
@@ -432,7 +470,7 @@ const VisitForm: React.FC<VisitFormProps> = ({ patient, onSave, onCancel, initia
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="voice-terminal grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-5 space-y-4">
             <div className="flex items-center justify-between">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Main Diagnosis</label>
@@ -658,6 +696,13 @@ const VitalInput = ({ label, value, onChange }: { label: string, value: number |
   <div className="space-y-1.5">
     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
     <input type="number" step="any" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-blue-500 font-bold text-xs text-center" value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder="--" />
+  </div>
+);
+
+const StickyVital = ({ label, value, unit }: { label: string, value: any, unit?: string }) => (
+  <div className={`flex flex-col items-center justify-center min-w-[50px] px-3 py-1 rounded-lg border border-slate-100 bg-slate-50/50 ${!value ? 'opacity-30' : ''}`}>
+    <span className="text-[7px] font-black text-slate-400 leading-none">{label}</span>
+    <span className="text-[10px] font-black text-slate-900 mt-1 leading-none">{value || '--'} <span className="text-[7px] opacity-40">{unit}</span></span>
   </div>
 );
 

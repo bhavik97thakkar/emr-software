@@ -694,13 +694,13 @@ const PatientProfile = () => {
 
   return (
     <div className="space-y-6 pb-16 max-w-[1440px] mx-auto animate-in fade-in duration-500">
-      <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 no-print">
+      <div className="patient-sovereignty bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 no-print">
         <div className="flex items-center space-x-6">
           <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-white border-4 border-white shadow-lg shrink-0 transition-colors ${patient.gender === 'Female' ? 'bg-pink-500' : 'bg-blue-600'}`}>
             <User size={28} strokeWidth={2} />
           </div>
           <div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 patient-sovereignty">
               <h1 className="text-lg md:text-xl font-black text-slate-900 tracking-tight flex items-center font-serif-clinical">
                 {patient.name}
                 <button onClick={() => setIsEditingProfile(true)} className="ml-3 p-1.5 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit Profile"><Edit2 size={14} /></button>
@@ -728,6 +728,12 @@ const PatientProfile = () => {
                 </div>
               </h1>
               {totalDues > 0 && <span className="bg-rose-50 text-rose-600 text-[8px] font-black px-1.5 py-0.5 rounded border border-rose-100 uppercase tracking-widest">Awaiting Payment</span>}
+              {(patient.allergyMedicine || patient.allergyOther) && (
+                <div className="flex items-center space-x-2 px-2.5 py-1 bg-rose-50 border border-rose-200 rounded-lg allergy-pulse ml-2 shadow-sm">
+                  <AlertCircle size={10} className="text-rose-600" />
+                  <span className="text-[8px] font-black text-rose-700 uppercase tracking-widest">Allergy Alert</span>
+                </div>
+              )}
             </div>
             <div className="flex flex-wrap gap-2 md:gap-3 mt-2 font-bold uppercase tracking-widest">
               <span className="flex items-center bg-slate-100 px-3 py-1.5 rounded-lg text-[10px] text-slate-700 font-black"><Phone size={12} className="mr-1.5 opacity-40" /> {patient.mobile}</span>
@@ -790,7 +796,7 @@ const PatientProfile = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 no-print">
         {/* Encounter Ledger (Showing exact time) */}
-        <div className="lg:col-span-12">
+        <div className="lg:col-span-12 clinical-ledger">
           <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
             <div className="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
               <h3 className="font-black text-slate-900 text-[10px] tracking-widest uppercase flex items-center">

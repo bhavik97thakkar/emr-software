@@ -31,7 +31,8 @@ import {
   Cloud,
   CloudOff,
   Wifi,
-  WifiOff
+  WifiOff,
+  Sparkles
 } from 'lucide-react';
 import { DB } from './services/db';
 import { seedDemoData } from './services/demoSeed';
@@ -59,6 +60,7 @@ import DemographicPersonaReport from './components/reports/DemographicPersonaRep
 import MedicationFrequencyReport from './components/reports/MedicationFrequencyReport';
 import ReferralSourceReport from './components/reports/ReferralSourceReport';
 import { ToastProvider } from './context/ToastContext';
+import GuideOverlay, { GuideStep } from './components/GuideOverlay';
 
 const ConnectivityBadge = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -102,14 +104,15 @@ const ConnectivityBadge = () => {
   );
 };
 
-const Sidebar = ({ isOpen, toggle, isCollapsed, onToggleCollapse, currentUser, onLogoutRequest, syncStatus }: {
+const Sidebar = ({ isOpen, toggle, isCollapsed, onToggleCollapse, currentUser, onLogoutRequest, syncStatus, onStartGuide }: {
   isOpen: boolean,
   toggle: () => void,
   isCollapsed: boolean,
   onToggleCollapse: () => void,
   currentUser: any,
   onLogoutRequest: () => void,
-  syncStatus: any
+  syncStatus: any,
+  onStartGuide: (key: string) => void
 }) => {
   const isUpToDate = syncStatus.lastSync && new Date(syncStatus.lastSync) >= new Date(syncStatus.lastChange);
 
@@ -148,6 +151,17 @@ const Sidebar = ({ isOpen, toggle, isCollapsed, onToggleCollapse, currentUser, o
         <NavLink to="/diagnosis-master" icon={<Settings size={20} />} label="Templates" onClick={toggle} isCollapsed={isCollapsed} />
         <NavLink to="/cloud" icon={<Cloud size={20} className={isUpToDate ? "text-emerald-500" : "text-blue-400"} />} label="Cloud" onClick={toggle} isCollapsed={isCollapsed} />
       </nav>
+
+      <div className="px-4 mt-6">
+        <button 
+          onClick={() => onStartGuide('global')}
+          className={`flex items-center w-full p-3 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all border border-blue-500/20 group ${isCollapsed ? 'justify-center mx-auto w-10 h-10 p-0' : 'space-x-4'}`}
+          title="Clinical Walkthrough"
+        >
+          <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
+          {!isCollapsed && <span className="text-[9px] font-black uppercase tracking-[0.2em]">Clinical Guide</span>}
+        </button>
+      </div>
 
       <div className="absolute bottom-0 w-full border-t border-white/5 bg-[#050912]/80 backdrop-blur-xl">
         <div className="p-4">
@@ -213,6 +227,33 @@ const App = () => {
   const [currentUser, setCurrentUser] = useState<any>(DB.getCurrentUser());
   const [syncStatus, setSyncStatus] = useState<any>(DB.getSyncStatus());
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [activeGuide, setActiveGuide] = useState<string | null>(null);
+
+  const GUIDES: Record<string, GuideStep[]> = {
+    global: [
+      { target: 'sidebar', title: 'Clinical OS Navigation', description: 'Access patient records, analytics, and clinical templates from this high-performance sidebar.', position: 'right' },
+      { target: 'encounter-entry', title: 'Rapid Encounter Entry', description: 'Start a new clinical consultation instantly with AI-powered suggestions and voice-first vitals capture.', position: 'bottom' },
+      { target: 'connectivity', title: 'Cloud Sovereignty', description: 'Your data syncs automatically with your Hostinger Private Vault. Work offline; we handle the sync.', position: 'bottom' }
+    ],
+    dashboard: [
+      { target: 'practice-command', title: 'Practice Command Centre', description: 'Your 360-degree clinical dashboard. Monitor revenue, patient flow, and epidemiological trends in real-time.', position: 'bottom' },
+      { target: 'clinical-schedule', title: 'Clinical Queue', description: 'Manage your daily appointments. See reason-for-visit at a glance and navigate to patient profiles instantly.', position: 'right' },
+      { target: 'case-frequency', title: 'Disease Intelligence', description: 'Visualize top diagnoses in your practice. Automatically tracks clinic quality and disease prevalence.', position: 'left' }
+    ],
+    profile: [
+      { target: 'patient-sovereignty', title: 'Patient Sovereignty', description: 'Complete longitudinal medical record. Track vitals trends, family history, and past clinical encounters.', position: 'bottom' },
+      { target: 'clinical-ledger', title: 'Clinical Ledger', description: 'A transparent record of every visit, diagnosis, and prescription ever issued to this patient.', position: 'top' }
+    ],
+    visit: [
+      { target: 'vitals-ribbon', title: 'Sticky Clinical Context', description: 'Active vitals stay pinned here, ensuring you never lose context while entrying prescriptions.', position: 'bottom' },
+      { target: 'voice-terminal', title: 'AI Voice Terminal', description: 'Enter clinical notes using natural language. Our AI extracts diagnoses and suggests medications automatically.', position: 'bottom' },
+      { target: 'allergy-alert', title: 'High-Alert Safety', description: 'Safety-first alerts pulse in Rose Pink to ensure you NEVER miss a critical medicine allergy during a visit.', position: 'bottom' }
+    ],
+    cloud: [
+      { target: 'sync-hub', title: 'Data Sovereignty Hub', description: 'Manage your private cloud connection. Hostinger KVM-2 ensures your patient data is under your exclusive control.', position: 'bottom' },
+      { target: 'registry-pulse', title: 'Registry Pulse', description: 'Monitor live data transfer between your local terminal and your cloud vault.', position: 'bottom' }
+    ]
+  };
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -223,6 +264,29 @@ const App = () => {
     window.addEventListener('emr-db-update', handleUpdate);
     return () => window.removeEventListener('emr-db-update', handleUpdate);
   }, []);
+
+  // Integrated Walkthrough Auto-Trigger System
+  const location = useLocation();
+  useEffect(() => {
+    const pathGuideMap: Record<string, string> = {
+      '/': 'dashboard',
+      '/patient/': 'profile',
+      '/new-visit': 'visit',
+      '/cloud': 'cloud'
+    };
+
+    const path = location.pathname;
+    let guideKey = '';
+    
+    if (path === '/') guideKey = 'dashboard';
+    else if (path.startsWith('/patient/')) guideKey = 'profile';
+    else if (path === '/new-visit') guideKey = 'visit';
+    else if (path === '/cloud') guideKey = 'cloud';
+
+    if (guideKey && !localStorage.getItem(`medcore_guide_${guideKey}`)) {
+      setActiveGuide(guideKey);
+    }
+  }, [location.pathname]);
 
   if (!currentUser) return <Login onLoginSuccess={(user) => { seedDemoData(); DB.markDataChanged(); setCurrentUser(user); }} />;
 
@@ -238,6 +302,7 @@ const App = () => {
             currentUser={currentUser}
             onLogoutRequest={() => setShowLogoutConfirm(true)}
             syncStatus={syncStatus}
+            onStartGuide={setActiveGuide}
           />
           <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
             <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 h-20 flex items-center px-8 justify-between no-print shadow-sm">
@@ -245,7 +310,7 @@ const App = () => {
               <div className="flex-1 flex justify-center md:justify-start"><div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hidden lg:block">MedCore Clinical Terminal v4.2</div></div>
               <div className="flex items-center space-x-6">
                 <ConnectivityBadge />
-                <Link to="/new-visit" className="flex items-center space-x-3 bg-[#050912] text-white px-7 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all">
+                <Link to="/new-visit" className="encounter-entry flex items-center space-x-3 bg-[#050912] text-white px-7 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all">
                   <PlusCircle size={18} /><span>Encounter Entry</span>
                 </Link>
               </div>
@@ -287,6 +352,14 @@ const App = () => {
               </div>
             </div>
           </div>
+        )}
+        {activeGuide && (
+          <GuideOverlay 
+            guideKey={activeGuide}
+            steps={GUIDES[activeGuide] || []}
+            onClose={() => setActiveGuide(null)}
+            onComplete={() => setActiveGuide(null)}
+          />
         )}
       </HashRouter>
     </ToastProvider>

@@ -18,10 +18,26 @@
         body {
             font-family: 'Poppins', sans-serif;
             -webkit-font-smoothing: antialiased;
+            background-color: #fcfaf7; /* Clinical Cream */
         }
 
         .font-serif-clinical {
             font-family: 'Playfair Display', serif;
+        }
+
+        .allergy-pulse {
+            animation: pulse-rose 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-rose {
+            0%, 100% {
+                background-color: rgba(225, 29, 72, 0.1);
+                border-color: rgba(225, 29, 72, 0.2);
+            }
+            50% {
+                background-color: rgba(225, 29, 72, 0.2);
+                border-color: rgba(225, 29, 72, 0.5);
+            }
         }
 
         @keyframes wiggle {

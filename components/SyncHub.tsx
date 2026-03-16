@@ -111,7 +111,7 @@ const SyncHub = () => {
 
 
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-2 sync-hub">
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-8 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
@@ -155,7 +155,7 @@ const SyncHub = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm text-center">
+          <div className="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm text-center registry-pulse">
             <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${isUpToDate ? 'bg-emerald-50' : 'bg-blue-50'}`}>
               {isUpToDate ? <CheckCircle2 size={40} className="text-emerald-500" /> : <RefreshCw size={40} className="text-blue-500 animate-[spin_4s_linear_infinite]" />}
             </div>

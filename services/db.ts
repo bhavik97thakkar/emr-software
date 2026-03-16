@@ -5,8 +5,18 @@
 
 // Detect environment and set API URL
 const getApiUrl = () => {
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    return 'http://localhost:5000/api';
+  if (typeof window !== 'undefined') {
+    const { hostname, protocol } = window.location;
+    // If we're on localhost or a local IP (192.168.x.x or 10.x.x.x or 172.x.x.x)
+    const isLocal = hostname === 'localhost' || 
+                    hostname === '127.0.0.1' || 
+                    /^192\.168\./.test(hostname) || 
+                    /^10\./.test(hostname) || 
+                    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname);
+    
+    if (isLocal) {
+      return `${protocol}//${hostname}:5000/api`;
+    }
   }
   // Use environment variable for production
   return import.meta.env.VITE_API_URL || 'https://medcore-emr-backend.onrender.com/api';
