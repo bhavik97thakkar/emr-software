@@ -117,7 +117,7 @@ const Sidebar = ({ isOpen, toggle, isCollapsed, onToggleCollapse, currentUser, o
   const isUpToDate = syncStatus.lastSync && new Date(syncStatus.lastSync) >= new Date(syncStatus.lastChange);
 
   return (
-    <aside className={`fixed inset-y-0 left-0 z-50 bg-[#050912] text-slate-400 transform transition-all duration-300 ease-in-out md:translate-x-0 no-print ${isOpen ? 'translate-x-0' : '-translate-x-full'} ${isCollapsed ? 'w-20' : 'w-64'}`}>
+    <aside className={`fixed inset-y-0 left-0 z-50 bg-[#050912] text-slate-400 transform transition-all duration-300 ease-in-out md:translate-x-0 no-print flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'} ${isCollapsed ? 'w-20' : 'w-64'}`}>
       <div className={`flex items-center h-20 border-b border-white/5 transition-all px-4 ${isCollapsed ? 'flex-col justify-center space-y-2 py-4 h-auto' : 'justify-between'}`}>
         <div className="flex items-center space-x-3 overflow-hidden">
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-900/40 shrink-0">
@@ -142,25 +142,31 @@ const Sidebar = ({ isOpen, toggle, isCollapsed, onToggleCollapse, currentUser, o
         )}
       </div>
 
-      <nav className="p-4 space-y-2">
-        <NavLink to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-dashboard" />
-        <NavLink to="/new-visit" icon={<UserPlus size={20} />} label="New Patient" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-newpatient" />
-        <NavLink to="/patients" icon={<User size={20} />} label="Patients" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-patients" />
-        <NavLink to="/families" icon={<Users size={20} />} label="Families" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-families" />
-        <NavLink to="/reports" icon={<BarChart4 size={20} />} label="Analytics" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-analytics" />
-        <NavLink to="/diagnosis-master" icon={<Settings size={20} />} label="Templates" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-templates" />
-        <NavLink to="/cloud" icon={<Cloud size={20} className={isUpToDate ? "text-emerald-500" : "text-blue-400"} />} label="Cloud" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-cloud" />
-      </nav>
+      <div className="flex-1 overflow-y-auto custom-scrollbar pb-32">
+        <nav className="p-4 space-y-2">
+          <NavLink to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-dashboard" />
+          <NavLink to="/new-visit" icon={<UserPlus size={20} />} label="New Patient" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-newpatient" />
+          <NavLink to="/patients" icon={<User size={20} />} label="Patients" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-patients" />
+          <NavLink to="/families" icon={<Users size={20} />} label="Families" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-families" />
+          <NavLink to="/reports" icon={<BarChart4 size={20} />} label="Analytics" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-analytics" />
+          <NavLink to="/diagnosis-master" icon={<Settings size={20} />} label="Templates" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-templates" />
+          <NavLink to="/cloud" icon={<Cloud size={20} className={isUpToDate ? "text-emerald-500" : "text-blue-400"} />} label="Cloud" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-cloud" />
+        </nav>
 
-      <div className="px-4 mt-8">
-        <button 
-          onClick={() => onStartGuide('global')}
-          className={`flex items-center w-full p-4 rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-900/20 border border-indigo-500/30 group ${isCollapsed ? 'justify-center mx-auto w-12 h-12 p-0' : 'space-x-4'}`}
-          title="Start Clinical Walkthrough"
-        >
-          <Sparkles size={20} className="group-hover:rotate-12 transition-transform text-indigo-200" />
-          {!isCollapsed && <span className="text-[10px] font-black uppercase tracking-[0.2em]">Interactive Guide</span>}
-        </button>
+        <div className="px-4 mt-4">
+          <button 
+            onClick={() => {
+              console.log("[Sidebar] Starting Guide...");
+              onStartGuide('global');
+            }}
+            id="clinical-guide-button"
+            className={`flex items-center w-full p-4 rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-900/40 border border-indigo-500/30 group ${isCollapsed ? 'justify-center mx-auto w-12 h-12 p-0' : 'space-x-4'}`}
+            title="Start Interactive Clinical Walkthrough"
+          >
+            <Sparkles size={20} className="group-hover:rotate-12 transition-transform text-indigo-200" />
+            {!isCollapsed && <span className="text-[10px] font-black uppercase tracking-[0.2em] font-sans">Interactive Guide</span>}
+          </button>
+        </div>
       </div>
 
       <div className="absolute bottom-0 w-full border-t border-white/5 bg-[#050912]/80 backdrop-blur-xl">
