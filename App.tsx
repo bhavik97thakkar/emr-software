@@ -152,14 +152,14 @@ const Sidebar = ({ isOpen, toggle, isCollapsed, onToggleCollapse, currentUser, o
         <NavLink to="/cloud" icon={<Cloud size={20} className={isUpToDate ? "text-emerald-500" : "text-blue-400"} />} label="Cloud" onClick={toggle} isCollapsed={isCollapsed} tourClass="tour-sidebar-cloud" />
       </nav>
 
-      <div className="px-4 mt-6">
+      <div className="px-4 mt-8">
         <button 
           onClick={() => onStartGuide('global')}
-          className={`flex items-center w-full p-3 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all border border-blue-500/20 group ${isCollapsed ? 'justify-center mx-auto w-10 h-10 p-0' : 'space-x-4'}`}
-          title="Clinical Walkthrough"
+          className={`flex items-center w-full p-4 rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-900/20 border border-indigo-500/30 group ${isCollapsed ? 'justify-center mx-auto w-12 h-12 p-0' : 'space-x-4'}`}
+          title="Start Clinical Walkthrough"
         >
-          <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
-          {!isCollapsed && <span className="text-[9px] font-black uppercase tracking-[0.2em]">✨ Clinical Guide</span>}
+          <Sparkles size={20} className="group-hover:rotate-12 transition-transform text-indigo-200" />
+          {!isCollapsed && <span className="text-[10px] font-black uppercase tracking-[0.2em]">Interactive Guide</span>}
         </button>
       </div>
 
