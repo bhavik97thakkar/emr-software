@@ -237,32 +237,32 @@ const App = () => {
 
   const GUIDES: Record<string, GuideStep[]> = {
     global: [
-      { target: 'tour-sidebar-dashboard', title: 'Clinic Command Centre', description: 'Monitor your practice heartbeat. Real-time patient flow, revenue trends, and schedule visibility.' },
-      { target: 'tour-sidebar-newpatient', title: 'Rapid Registration', description: 'Onboard new patients in seconds.demographics and quick-tags for efficient indexing.' },
-      { target: 'tour-sidebar-patients', title: 'Clinical Longitudinal Records', description: 'Access the complete medical history of any patient. Search by face, mobile, or name.' },
-      { target: 'tour-sidebar-families', title: 'Family Mapping', description: 'Group patients by household. Essential for understanding genetic risks and pediatric care.' },
-      { target: 'tour-sidebar-analytics', title: 'Disease Intelligence', description: 'Powerful data reporting. Track disease prevalence, pharmacy utilization, and clinic growth.' },
-      { target: 'tour-sidebar-templates', title: 'Smart Prescription Templates', description: 'Save hours. Setup common diagnosis patterns and medication sets for one-tap entry.' },
-      { target: 'tour-sidebar-cloud', title: 'Hostinger Private Cloud', description: 'Your data is sovereign. Monitor your cloud sync status and KVM-2 infrastructure health.' },
-      { target: 'encounter-entry', title: 'Consultation Start', description: 'Ready to see a patient? Start a high-performance visit session from here.' }
+      { target: 'tour-sidebar-dashboard',   route: '/',               title: 'Clinic Command Centre',          description: 'Monitor your practice heartbeat. Real-time patient flow, revenue trends, and schedule visibility.' },
+      { target: 'tour-sidebar-newpatient',   route: '/new-visit',      title: 'Rapid Registration',              description: 'Onboard new patients in seconds. Capture demographics and clinical tags for efficient indexing.' },
+      { target: 'tour-sidebar-patients',     route: '/patients',       title: 'Clinical Longitudinal Records',   description: 'Access the complete medical history of any patient. Search by mobile number or name.' },
+      { target: 'tour-sidebar-families',     route: '/families',       title: 'Family Mapping',                  description: 'Group patients by household. Essential for understanding genetic risks and pediatric care.' },
+      { target: 'tour-sidebar-analytics',    route: '/reports',        title: 'Disease Intelligence',            description: 'Powerful data reporting. Track disease prevalence, pharmacy utilization, and clinic growth.' },
+      { target: 'tour-sidebar-templates',    route: '/diagnosis-master', title: 'Smart Prescription Templates', description: 'Save hours. Setup common diagnosis patterns and medication sets for one-tap entry.' },
+      { target: 'tour-sidebar-cloud',        route: '/cloud',          title: 'Hostinger Private Cloud',         description: 'Your data is sovereign. Monitor your cloud sync status and KVM-2 infrastructure health.' },
+      { target: 'encounter-entry',           route: '/',               title: 'Consultation Entry',              description: 'Ready to see a patient? Start a high-performance visit session from here.' }
     ],
     dashboard: [
-      { target: 'practice-command', title: 'Practice Command Centre', description: 'Your 360-degree clinical dashboard. Monitor revenue, patient flow, and epidemiological trends in real-time.', position: 'bottom' },
-      { target: 'clinical-schedule', title: 'Clinical Queue', description: 'Manage your daily appointments. See reason-for-visit at a glance and navigate to patient profiles instantly.', position: 'right' },
-      { target: 'case-frequency', title: 'Disease Intelligence', description: 'Visualize top diagnoses in your practice. Automatically tracks clinic quality and disease prevalence.', position: 'left' }
+      { target: 'practice-command', route: '/',        title: 'Practice Command Centre', description: 'Your 360-degree clinical dashboard. Monitor revenue, patient flow, and epidemiological trends in real-time.' },
+      { target: 'tour-dashboard-schedule',   route: '/', title: 'Clinical Queue', description: 'Manage your daily appointments. See reason-for-visit at a glance and navigate to patient profiles instantly.' },
+      { target: 'tour-dashboard-intelligence', route: '/', title: 'Disease Intelligence', description: 'Visualize top diagnoses in your practice. Automatically tracks clinic quality and disease prevalence.' }
     ],
     profile: [
-      { target: 'patient-sovereignty', title: 'Patient Sovereignty', description: 'Complete longitudinal medical record. Track vitals trends, family history, and past clinical encounters.', position: 'bottom' },
-      { target: 'clinical-ledger', title: 'Clinical Ledger', description: 'A transparent record of every visit, diagnosis, and prescription ever issued to this patient.', position: 'top' }
+      { target: 'patient-sovereignty', title: 'Patient Sovereignty', description: 'Complete longitudinal medical record. Track vitals trends, family history, and past clinical encounters.' },
+      { target: 'tour-profile-ledger',  title: 'Clinical Ledger', description: 'A transparent record of every visit, diagnosis, and prescription ever issued to this patient.' }
     ],
     visit: [
-      { target: 'vitals-ribbon', title: 'Sticky Clinical Context', description: 'Active vitals stay pinned here, ensuring you never lose context while entrying prescriptions.', position: 'bottom' },
-      { target: 'voice-terminal', title: 'AI Voice Terminal', description: 'Enter clinical notes using natural language. Our AI extracts diagnoses and suggests medications automatically.', position: 'bottom' },
-      { target: 'allergy-alert', title: 'High-Alert Safety', description: 'Safety-first alerts pulse in Rose Pink to ensure you NEVER miss a critical medicine allergy during a visit.', position: 'bottom' }
+      { target: 'vitals-ribbon',  title: 'Sticky Clinical Context', description: 'Active vitals stay pinned here, ensuring you never lose context while entering prescriptions.' },
+      { target: 'voice-terminal', title: 'AI Voice Terminal',       description: 'Enter clinical notes using natural language. Our AI extracts diagnoses and suggests medications automatically.' },
+      { target: 'allergy-alert',  title: 'High-Alert Safety',       description: 'Safety-first alerts pulse in Rose Pink to ensure you NEVER miss a critical medicine allergy during a visit.' }
     ],
     cloud: [
-      { target: 'sync-hub', title: 'Data Sovereignty Hub', description: 'Manage your private cloud connection. Hostinger KVM-2 ensures your patient data is under your exclusive control.', position: 'bottom' },
-      { target: 'registry-pulse', title: 'Registry Pulse', description: 'Monitor live data transfer between your local terminal and your cloud vault.', position: 'bottom' }
+      { target: 'sync-hub',       route: '/cloud', title: 'Data Sovereignty Hub', description: 'Manage your private cloud connection. Hostinger KVM-2 ensures your patient data is under your exclusive control.' },
+      { target: 'registry-pulse', route: '/cloud', title: 'Registry Pulse',       description: 'Monitor live data transfer between your local terminal and your cloud vault.' }
     ]
   };
 
@@ -315,7 +315,6 @@ const App = () => {
             onStartGuide={setActiveGuide}
           />
           <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
-            <div className="bg-red-600 text-white text-center py-1 font-black text-[10px] uppercase tracking-widest z-[100] sticky top-0">Deployment Debug: High-Fidelity Walkthrough v2</div>
             <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 h-20 flex items-center px-8 justify-between no-print shadow-sm">
               <button onClick={() => setIsSidebarOpen(true)} className="p-2 md:hidden text-slate-600 hover:text-slate-900 transition-colors"><Menu size={24} /></button>
               <div className="flex-1 flex justify-center md:justify-start"><div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hidden lg:block">MedCore Clinical Terminal v4.2</div></div>
