@@ -118,9 +118,8 @@ const GuideOverlay: React.FC<GuideOverlayProps> = ({ steps, onComplete, onClose,
           transition: 'top 0.35s cubic-bezier(0.4,0,0.2,1), left 0.35s cubic-bezier(0.4,0,0.2,1)'
         });
 
-        if (rect.top < 0 || rect.bottom > window.innerHeight) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        // Always scroll target into view (works for sidebar overflow scroll too)
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       } else {
         setTargetRect(null);
         setCardStyle(centeredCardStyle);
