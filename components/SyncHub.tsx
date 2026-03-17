@@ -22,6 +22,7 @@ import {
 import { DB } from '../services/db';
 import { GoogleGenAI } from "@google/genai";
 import { useToast } from '../context/ToastContext';
+import ConfirmationModal from './ConfirmationModal';
 
 const SyncHub = () => {
   const toast = useToast();
@@ -30,6 +31,7 @@ const SyncHub = () => {
   const [isPulling, setIsPulling] = useState(false);
   const [aiAudit, setAiAudit] = useState<string | null>(null);
   const [isAuditing, setIsAuditing] = useState(false);
+  const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadData = async () => {
@@ -51,7 +53,7 @@ const SyncHub = () => {
     if (success) {
       toast.success("Cloud Pull successful. Registry refreshed.");
     } else {
-      toast.error("Pull failed. Ensure internet connection.");
+      toast.error("Pull failed. If this is Dr. Aarti's first sync, the server may be waking up. Please try again in 30 seconds.");
     }
   };
 
@@ -69,10 +71,9 @@ const SyncHub = () => {
   };
   
   const handlePurge = () => {
-    if (window.confirm("⚠️ DANGER: This will delete all clinical data currently saved on THIS machine. If you haven't synced to simple cloud, data will be LOST. Proceed?")) {
-      DB.purgeLocalCache();
-      toast.success("Local clinical cache purged successfully.");
-    }
+    DB.purgeLocalCache();
+    toast.success("Clinical Session Reset: Local records cleared.");
+    loadData();
   };
 
   const isUpToDate = syncStatus.lastSync && new Date(syncStatus.lastSync) >= new Date(syncStatus.lastChange);
@@ -159,15 +160,26 @@ const SyncHub = () => {
               color="indigo"
             />
             <ActionCard
-              title="Purge Clinical Cache"
-              desc="Hard reset local data (Fixes stale demo records)."
+              title="Clinical Session Reset"
+              desc="Securely wipe cached patient records from this device."
               icon={Trash2}
-              onClick={handlePurge}
+              onClick={() => setShowPurgeConfirm(true)}
               color="rose"
             />
             <input ref={fileInputRef} type="file" className="hidden" accept=".json" onChange={handleImport} />
           </div>
         </div>
+
+        <ConfirmationModal
+          isOpen={showPurgeConfirm}
+          onClose={() => setShowPurgeConfirm(false)}
+          onConfirm={handlePurge}
+          title="Reset Clinical Session?"
+          message="This will securely wipe all cached patient records and diagnostic data from THIS machine. This action is local and will NOT affect cloud-synced data unless explicitly deleted."
+          confirmLabel="Purge Local Cache"
+          cancelLabel="Cancel"
+          type="danger"
+        />
 
         <div className="space-y-6">
           <div className="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm text-center registry-pulse">
