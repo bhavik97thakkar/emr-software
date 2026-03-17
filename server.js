@@ -494,54 +494,55 @@ async function logAudit(action, email, tenantId, ip, details = {}, success = tru
 }
 
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
-  const { email, password, gdprConsent } = req.body;
-  const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+  try {
+    const { email, password, gdprConsent } = req.body;
+    const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
 
-  // Input validation
-  if (!email || !password) {
-    await logAudit('LOGIN_ATTEMPT', email || 'UNKNOWN', null, clientIp, { error: 'Missing credentials' }, false, 'Missing email or password');
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
+    // Input validation
+    if (!email || !password) {
+      await logAudit('LOGIN_ATTEMPT', email || 'UNKNOWN', null, clientIp, { error: 'Missing credentials' }, false, 'Missing email or password');
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
 
-  // Check for account lockout
-  if (isAccountLocked(email)) {
-    const lockTime = lockedAccounts.get(email);
-    const remaining = Math.ceil((lockTime - Date.now()) / 1000);
-    await logAudit('LOGIN_ATTEMPT', email, null, clientIp, { error: 'Account locked' }, false, 'Account locked');
-    return res.status(423).json({ error: `Account locked. Try again in ${remaining} seconds`, lockTime: remaining });
-  }
+    // Check for account lockout
+    if (isAccountLocked(email)) {
+      const lockTime = lockedAccounts.get(email);
+      const remaining = Math.ceil((lockTime - Date.now()) / 1000);
+      await logAudit('LOGIN_ATTEMPT', email, null, clientIp, { error: 'Account locked' }, false, 'Account locked');
+      return res.status(423).json({ error: `Account locked. Try again in ${remaining} seconds`, lockTime: remaining });
+    }
 
-  if (await Config.countDocuments() === 0) {
-    const seedEmail = process.env.CLINIC_EMAIL || 'admin@medcore.in';
-    const seedPassword = process.env.CLINIC_PASSWORD || 'password123';
-    const seedName = process.env.CLINIC_NAME || 'MedCore Clinic';
+    if (await Config.countDocuments() === 0) {
+      const seedEmail = process.env.CLINIC_EMAIL || 'admin@medcore.in';
+      const seedPassword = process.env.CLINIC_PASSWORD || 'password123';
+      const seedName = process.env.CLINIC_NAME || 'MedCore Clinic';
 
-    await Config.create({
-      email: seedEmail,
-      password: seedPassword,
-      clinicName: seedName,
-      tenantId: seedEmail,
-      gdprConsent: true,
-      gdprConsentDate: new Date(),
-      privacyPolicyAccepted: true,
-      gdprConsentVersion: '1.0'
-    });
-    console.log(`✅ Seeded "${seedName}" (${seedEmail})`);
+      await Config.create({
+        email: seedEmail,
+        password: seedPassword,
+        clinicName: seedName,
+        tenantId: seedEmail,
+        gdprConsent: true,
+        gdprConsentDate: new Date(),
+        privacyPolicyAccepted: true,
+        gdprConsentVersion: '1.0'
+      });
+      console.log(`✅ Seeded "${seedName}" (${seedEmail})`);
 
-    // Also seed demo account with GDPR consent
-    await Config.create({
-      email: 'demo@medcore.in',
-      password: 'demo123',
-      clinicName: 'MedCore Demo Clinic',
-      tenantId: 'demo@medcore.in',
-      isDemo: true,
-      gdprConsent: true,
-      gdprConsentDate: new Date(),
-      privacyPolicyAccepted: true,
-      gdprConsentVersion: '1.0'
-    });
-    console.log(`✅ Seeded "MedCore Demo Clinic" (demo@medcore.in)`);
-  }
+      // Also seed demo account with GDPR consent
+      await Config.create({
+        email: 'demo@medcore.in',
+        password: 'demo123',
+        clinicName: 'MedCore Demo Clinic',
+        tenantId: 'demo@medcore.in',
+        isDemo: true,
+        gdprConsent: true,
+        gdprConsentDate: new Date(),
+        privacyPolicyAccepted: true,
+        gdprConsentVersion: '1.0'
+      });
+      console.log(`✅ Seeded "MedCore Demo Clinic" (demo@medcore.in)`);
+    }
 
   // Special handling for demo credentials
   if (email === 'demo@medcore.in' && password === 'demo123') {
@@ -662,6 +663,11 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
       message: attempts >= 4 ? 'Account will be locked after one more failed attempt' : undefined,
       locked: isNowLocked
     });
+    }
+  } catch (err) {
+    console.error('❌ Login endpoint error:', err.message, err.stack);
+    await logAudit('LOGIN_ERROR', email || 'UNKNOWN', null, 'unknown', { error: err.message }, false, 'Server error during login');
+    return res.status(500).json({ error: 'Server error. Please try again later.' });
   }
 });
 
