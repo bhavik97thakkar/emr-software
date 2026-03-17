@@ -542,127 +542,188 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         gdprConsentVersion: '1.0'
       });
       console.log(`✅ Seeded "MedCore Demo Clinic" (demo@medcore.in)`);
-    }
 
-  // Special handling for demo credentials
-  if (email === 'demo@medcore.in' && password === 'demo123') {
-    let config = await Config.findOne({ email });
-    if (!config) {
-      config = await Config.create({
-        email: 'demo@medcore.in',
-        password: 'demo123',
-        clinicName: 'MedCore Demo Clinic',
-        tenantId: 'demo@medcore.in',
-        isDemo: true,
+      // Seed Dr. Aarti account
+      await Config.create({
+        email: 'dr.aarti@medcore.in',
+        password: 'AartiClinic123',
+        clinicName: 'Dr. Aarti Clinic',
+        tenantId: 'dr.aarti@medcore.in',
         gdprConsent: true,
         gdprConsentDate: new Date(),
         privacyPolicyAccepted: true,
         gdprConsentVersion: '1.0'
       });
+      console.log(`✅ Seeded "Dr. Aarti Clinic" (dr.aarti@medcore.in)`);
     }
 
-    // Clear failed attempts
-    clearFailedLoginAttempts(email);
-    config.loginAttempts = 0;
-    config.lastLoginDate = new Date();
-    config.lastLoginIp = clientIp;
-    await config.save();
-
-    // Sign JWT with 1-hour expiry
-    const jwtToken = jwt.sign(
-      { email: config.email, tenantId: config.tenantId },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRY, iat: Math.floor(Date.now() / 1000) }
-    );
-
-    await logAudit('LOGIN_SUCCESS', email, config.tenantId, clientIp, { isDemo: true }, true);
-
-    res.json({
-      success: true,
-      user: {
-        name: config.clinicName,
-        email: config.email,
-        token: jwtToken,
-        tokenExpiry: JWT_EXPIRY,
-        tenantId: config.tenantId,
-        isDemo: true,
-        gdprConsent: config.gdprConsent,
-        requiresGdprConsent: !config.gdprConsent,
-        clinicDetails: { name: config.clinicName, address: config.address }
+    // Special handling for demo credentials
+    if (email === 'demo@medcore.in' && password === 'demo123') {
+      let config = await Config.findOne({ email });
+      if (!config) {
+        config = await Config.create({
+          email: 'demo@medcore.in',
+          password: 'demo123',
+          clinicName: 'MedCore Demo Clinic',
+          tenantId: 'demo@medcore.in',
+          isDemo: true,
+          gdprConsent: true,
+          gdprConsentDate: new Date(),
+          privacyPolicyAccepted: true,
+          gdprConsentVersion: '1.0'
+        });
       }
-    });
-    return;
-  }
 
-  // Validate credentials
-  const config = await Config.findOne({ email, password });
-  if (config) {
-    // Check if account is locked again (in case of concurrent requests)
-    if (config.isLocked && config.lockUntil > new Date()) {
-      const remaining = Math.ceil((config.lockUntil - Date.now()) / 1000);
-      await logAudit('LOGIN_ATTEMPT', email, config.tenantId, clientIp, { error: 'Account locked' }, false);
-      return res.status(423).json({ error: `Account locked. Try again in ${remaining} seconds`, lockTime: remaining });
+      // Clear failed attempts
+      clearFailedLoginAttempts(email);
+      config.loginAttempts = 0;
+      config.lastLoginDate = new Date();
+      config.lastLoginIp = clientIp;
+      await config.save();
+
+      // Sign JWT with 1-hour expiry
+      const jwtToken = jwt.sign(
+        { email: config.email, tenantId: config.tenantId },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY, iat: Math.floor(Date.now() / 1000) }
+      );
+
+      await logAudit('LOGIN_SUCCESS', email, config.tenantId, clientIp, { isDemo: true }, true);
+
+      res.json({
+        success: true,
+        user: {
+          name: config.clinicName,
+          email: config.email,
+          token: jwtToken,
+          tokenExpiry: JWT_EXPIRY,
+          tenantId: config.tenantId,
+          isDemo: true,
+          gdprConsent: config.gdprConsent,
+          requiresGdprConsent: !config.gdprConsent,
+          clinicDetails: { name: config.clinicName, address: config.address }
+        }
+      });
+      return;
     }
 
-    // Migrate legacy accounts
-    if (!config.tenantId) {
-      config.tenantId = config.email;
-      console.log(`🔧 Migrated legacy account ${config.email} to tenantId: ${config.tenantId}`);
-    }
-
-    // Clear failed attempts on successful login
-    clearFailedLoginAttempts(email);
-    config.loginAttempts = 0;
-    config.isLocked = false;
-    config.lockUntil = null;
-    config.lastLoginDate = new Date();
-    config.lastLoginIp = clientIp;
-
-    // Update GDPR consent if provided
-    if (gdprConsent === true) {
-      config.gdprConsent = true;
-      config.gdprConsentDate = new Date();
-      config.privacyPolicyAccepted = true;
-      config.gdprConsentVersion = '1.0';
-    }
-
-    await config.save();
-
-    // Sign JWT with 1-hour expiry (CRITICAL SECURITY FIX)
-    const jwtToken = jwt.sign(
-      { email: config.email, tenantId: config.tenantId },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRY, iat: Math.floor(Date.now() / 1000) }
-    );
-
-    await logAudit('LOGIN_SUCCESS', email, config.tenantId, clientIp, { clinicName: config.clinicName }, true);
-
-    res.json({
-      success: true,
-      user: {
-        name: config.clinicName,
-        email: config.email,
-        token: jwtToken,
-        tokenExpiry: JWT_EXPIRY,
-        tenantId: config.tenantId,
-        gdprConsent: config.gdprConsent,
-        requiresGdprConsent: !config.gdprConsent,
-        clinicDetails: { name: config.clinicName, address: config.address }
+    // Special handling for Dr. Aarti account
+    if (email === 'dr.aarti@medcore.in' && password === 'AartiClinic123') {
+      let config = await Config.findOne({ email });
+      if (!config) {
+        config = await Config.create({
+          email: 'dr.aarti@medcore.in',
+          password: 'AartiClinic123',
+          clinicName: 'Dr. Aarti Clinic',
+          tenantId: 'dr.aarti@medcore.in',
+          gdprConsent: true,
+          gdprConsentDate: new Date(),
+          privacyPolicyAccepted: true,
+          gdprConsentVersion: '1.0'
+        });
       }
-    });
-  } else {
-    // Track failed attempt and implement account lockout
-    const attempts = recordFailedLogin(email);
-    const isNowLocked = isAccountLocked(email);
 
-    await logAudit('LOGIN_FAILED', email, null, clientIp, { attempts, locked: isNowLocked }, false, 'Invalid credentials');
+      // Clear failed attempts
+      clearFailedLoginAttempts(email);
+      config.loginAttempts = 0;
+      config.lastLoginDate = new Date();
+      config.lastLoginIp = clientIp;
+      await config.save();
 
-    res.status(401).json({
-      error: 'Invalid Credentials',
-      attemptCount: attempts,
-      message: attempts >= 4 ? 'Account will be locked after one more failed attempt' : undefined,
-      locked: isNowLocked
-    });
+      // Sign JWT with 1-hour expiry
+      const jwtToken = jwt.sign(
+        { email: config.email, tenantId: config.tenantId },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY, iat: Math.floor(Date.now() / 1000) }
+      );
+
+      await logAudit('LOGIN_SUCCESS', email, config.tenantId, clientIp, { clinicName: 'Dr. Aarti' }, true);
+
+      res.json({
+        success: true,
+        user: {
+          name: config.clinicName,
+          email: config.email,
+          token: jwtToken,
+          tokenExpiry: JWT_EXPIRY,
+          tenantId: config.tenantId,
+          gdprConsent: config.gdprConsent,
+          requiresGdprConsent: !config.gdprConsent,
+          clinicDetails: { name: config.clinicName, address: config.address }
+        }
+      });
+      return;
+    }
+
+    // Validate credentials
+    const config = await Config.findOne({ email, password });
+    if (config) {
+      // Check if account is locked again (in case of concurrent requests)
+      if (config.isLocked && config.lockUntil > new Date()) {
+        const remaining = Math.ceil((config.lockUntil - Date.now()) / 1000);
+        await logAudit('LOGIN_ATTEMPT', email, config.tenantId, clientIp, { error: 'Account locked' }, false);
+        return res.status(423).json({ error: `Account locked. Try again in ${remaining} seconds`, lockTime: remaining });
+      }
+
+      // Migrate legacy accounts
+      if (!config.tenantId) {
+        config.tenantId = config.email;
+        console.log(`🔧 Migrated legacy account ${config.email} to tenantId: ${config.tenantId}`);
+      }
+
+      // Clear failed attempts on successful login
+      clearFailedLoginAttempts(email);
+      config.loginAttempts = 0;
+      config.isLocked = false;
+      config.lockUntil = null;
+      config.lastLoginDate = new Date();
+      config.lastLoginIp = clientIp;
+
+      // Update GDPR consent if provided
+      if (gdprConsent === true) {
+        config.gdprConsent = true;
+        config.gdprConsentDate = new Date();
+        config.privacyPolicyAccepted = true;
+        config.gdprConsentVersion = '1.0';
+      }
+
+      await config.save();
+
+      // Sign JWT with 1-hour expiry (CRITICAL SECURITY FIX)
+      const jwtToken = jwt.sign(
+        { email: config.email, tenantId: config.tenantId },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY, iat: Math.floor(Date.now() / 1000) }
+      );
+
+      await logAudit('LOGIN_SUCCESS', email, config.tenantId, clientIp, { clinicName: config.clinicName }, true);
+
+      res.json({
+        success: true,
+        user: {
+          name: config.clinicName,
+          email: config.email,
+          token: jwtToken,
+          tokenExpiry: JWT_EXPIRY,
+          tenantId: config.tenantId,
+          gdprConsent: config.gdprConsent,
+          requiresGdprConsent: !config.gdprConsent,
+          clinicDetails: { name: config.clinicName, address: config.address }
+        }
+      });
+    } else {
+      // Track failed attempt and implement account lockout
+      const attempts = recordFailedLogin(email);
+      const isNowLocked = isAccountLocked(email);
+
+      await logAudit('LOGIN_FAILED', email, null, clientIp, { attempts, locked: isNowLocked }, false, 'Invalid credentials');
+
+      res.status(401).json({
+        error: 'Invalid Credentials',
+        attemptCount: attempts,
+        message: attempts >= 4 ? 'Account will be locked after one more failed attempt' : undefined,
+        locked: isNowLocked
+      });
     }
   } catch (err) {
     console.error('❌ Login endpoint error:', err.message, err.stack);
