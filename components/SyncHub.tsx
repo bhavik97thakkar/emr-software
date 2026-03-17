@@ -16,7 +16,8 @@ import {
   RefreshCw,
   Globe,
   CloudDownload,
-  Server
+  Server,
+  Trash2
 } from 'lucide-react';
 import { DB } from '../services/db';
 import { GoogleGenAI } from "@google/genai";
@@ -65,6 +66,13 @@ const SyncHub = () => {
       else toast.error("Import failed. Invalid file format.");
     };
     reader.readAsText(file);
+  };
+  
+  const handlePurge = () => {
+    if (window.confirm("⚠️ DANGER: This will delete all clinical data currently saved on THIS machine. If you haven't synced to simple cloud, data will be LOST. Proceed?")) {
+      DB.purgeLocalCache();
+      toast.success("Local clinical cache purged successfully.");
+    }
   };
 
   const isUpToDate = syncStatus.lastSync && new Date(syncStatus.lastSync) >= new Date(syncStatus.lastChange);
@@ -150,6 +158,13 @@ const SyncHub = () => {
               onClick={() => fileInputRef.current?.click()}
               color="indigo"
             />
+            <ActionCard
+              title="Purge Clinical Cache"
+              desc="Hard reset local data (Fixes stale demo records)."
+              icon={Trash2}
+              onClick={handlePurge}
+              color="rose"
+            />
             <input ref={fileInputRef} type="file" className="hidden" accept=".json" onChange={handleImport} />
           </div>
         </div>
@@ -207,7 +222,10 @@ const ActionCard = ({ title, desc, icon: Icon, onClick, color }: any) => (
     onClick={onClick}
     className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:border-blue-400 hover:shadow-xl transition-all text-left flex items-start space-x-5 group"
   >
-    <div className={`p-4 rounded-2xl shrink-0 group-hover:scale-110 transition-transform ${color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-indigo-50 text-indigo-600'}`}>
+    <div className={`p-4 rounded-2xl shrink-0 group-hover:scale-110 transition-transform ${
+      color === 'blue' ? 'bg-blue-50 text-blue-600' : 
+      color === 'rose' ? 'bg-rose-50 text-rose-600' : 'bg-indigo-50 text-indigo-600'
+    }`}>
       <Icon size={20} />
     </div>
     <div>

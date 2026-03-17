@@ -3,7 +3,18 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const jwt = require('jsonwebtoken'); // Security: JWT for session management
+const rateLimit = require('express-rate-limit'); // Security: Flood protection
 const app = express();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'medcore-clinical-vault-key-2026';
+
+// Security: Rate limiter for sync endpoints to prevent brute-force/DoS
+const syncLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 sync requests per window
+  message: { error: 'Too many sync attempts from this IP, please try again after 15 minutes' }
+});
 
 // CORS Configuration for deployment
 const corsOptions = {
@@ -217,7 +228,8 @@ const verifyAccess = async (req, res, next) => {
   if (!token) return res.status(401).json({ error: 'Session Expired' });
 
   try {
-    const config = await Config.findOne({ email: token });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const config = await Config.findOne({ email: decoded.email });
     if (!config || !config.isActive) return res.status(403).json({ error: 'Unauthorized Access' });
 
     // Attach tenant info to request
@@ -356,12 +368,15 @@ app.post('/api/auth/login', async (req, res) => {
       console.log(`✅ Auto-seeded demo account`);
     }
 
+    // Sign JWT
+    const jwtToken = jwt.sign({ email: config.email, tenantId: config.tenantId }, JWT_SECRET, { expiresIn: '7d' });
+
     res.json({
       success: true,
       user: {
         name: config.clinicName,
         email: config.email,
-        token: config.email,
+        token: jwtToken, // Return secure JWT instead of email
         tenantId: config.tenantId,
         isDemo: true,
         clinicDetails: { name: config.clinicName, address: config.address }
@@ -379,12 +394,15 @@ app.post('/api/auth/login', async (req, res) => {
       console.log(`🔧 Migrated legacy account ${config.email} to tenantId: ${config.tenantId}`);
     }
 
+    // Sign JWT
+    const jwtToken = jwt.sign({ email: config.email, tenantId: config.tenantId }, JWT_SECRET, { expiresIn: '7d' });
+
     res.json({
       success: true,
       user: {
         name: config.clinicName,
         email: config.email,
-        token: config.email,
+        token: jwtToken, // Return secure JWT instead of email
         tenantId: config.tenantId,
         clinicDetails: { name: config.clinicName, address: config.address }
       }
@@ -394,7 +412,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-app.get('/api/sync/pull-all', verifyAccess, async (req, res) => {
+app.get('/api/sync/pull-all', syncLimiter, verifyAccess, async (req, res) => {
   try {
     const { Patient, Visit, Family, Appointment, Report, CustomDiagnosis, Template } = req.models;
     const [patients, visits, families, appointments, reports, customDiagnoses, templates] =
@@ -423,7 +441,7 @@ app.get('/api/sync/pull-all', verifyAccess, async (req, res) => {
   }
 });
 
-app.post('/api/sync/push-all', verifyAccess, async (req, res) => {
+app.post('/api/sync/push-all', syncLimiter, verifyAccess, async (req, res) => {
   try {
     const { Patient, Visit, Family, Appointment, Report, CustomDiagnosis, Template } = req.models;
     const { patients, visits, families, appointments, reports, customDiagnoses, templates } = req.body;

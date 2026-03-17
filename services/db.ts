@@ -115,8 +115,19 @@ export const DB = {
 
   logout() {
     currentUser = null;
+    this.purgeLocalCache(); // Hard wipe clinical data on logout
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+  },
+
+  purgeLocalCache() {
+    const keys = [
+      'patients', 'visits', 'appointments', 'reports', 
+      'families', 'customDiagnoses', 'templates', 'lastChange', 'lastSync'
+    ];
+    keys.forEach(key => localStorage.removeItem(key));
+    console.log('🗑️ Local clinical cache purged.');
+    window.dispatchEvent(new CustomEvent('emr-db-update'));
   },
 
   async ping() {
