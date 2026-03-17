@@ -8,6 +8,9 @@
 // For better security, consider adding TweetNaCl.js library
 
 class LocalStorageEncryption {
+  private baseKey: string;
+  private sensitiveKeys: string[];
+
   constructor(encryptionKey = "medcore-frontend-key-2026") {
     this.baseKey = encryptionKey;
     this.sensitiveKeys = [

@@ -84,6 +84,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
+app.set('trust proxy', 1); // Trust proxy for Render deployment (required for express-rate-limit)
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '100mb' }));
 
@@ -517,11 +518,11 @@ async function logAudit(action, email, tenantId, ip, details = {}, success = tru
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
   try {
     let { email, password, gdprConsent } = req.body;
-    
+
     // Normalize inputs (trim whitespace, convert email to lowercase)
     email = (email || '').trim().toLowerCase();
     password = (password || '').trim();
-    
+
     const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
 
     // Input validation
@@ -611,7 +612,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
       const jwtToken = jwt.sign(
         { email: config.email, tenantId: config.tenantId },
         JWT_SECRET,
-        { expiresIn: JWT_EXPIRY, iat: Math.floor(Date.now() / 1000) }
+        { expiresIn: JWT_EXPIRY }
       );
 
       await logAudit('LOGIN_SUCCESS', email, config.tenantId, clientIp, { isDemo: true }, true);
@@ -676,7 +677,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         const jwtToken = jwt.sign(
           { email: config.email, tenantId: config.tenantId },
           JWT_SECRET,
-          { expiresIn: JWT_EXPIRY, iat: Math.floor(Date.now() / 1000) }
+          { expiresIn: JWT_EXPIRY }
         );
 
         await logAudit('LOGIN_SUCCESS', email, config.tenantId, clientIp, { clinicName: 'Dr. Aarti' }, true);
@@ -741,7 +742,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
       const jwtToken = jwt.sign(
         { email: config.email, tenantId: config.tenantId },
         JWT_SECRET,
-        { expiresIn: JWT_EXPIRY, iat: Math.floor(Date.now() / 1000) }
+        { expiresIn: JWT_EXPIRY }
       );
 
       await logAudit('LOGIN_SUCCESS', email, config.tenantId, clientIp, { clinicName: config.clinicName }, true);

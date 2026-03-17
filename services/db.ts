@@ -88,7 +88,7 @@ class SecureStorage {
           try {
             const decrypted = this.decrypt(encrypted);
             if (!decrypted) return null;
-            
+
             try {
               return JSON.parse(decrypted);
             } catch (parseErr) {
