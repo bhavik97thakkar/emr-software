@@ -63,7 +63,22 @@ function isAccountLocked(email) {
 
 // CORS Configuration for deployment
 const corsOptions = {
-  origin: true, // Reflects the requesting origin
+  origin: function (origin, callback) {
+    // Allow localhost for development
+    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    // Allow Netlify deployments
+    if (origin.includes('netlify.app')) {
+      return callback(null, true);
+    }
+    // Allow Render
+    if (origin.includes('onrender.com') || origin.includes('render.com')) {
+      return callback(null, true);
+    }
+    // Fallback: allow origin
+    callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

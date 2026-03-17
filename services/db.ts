@@ -85,8 +85,23 @@ class SecureStorage {
       if (this.sensitiveKeys.includes(key)) {
         const encrypted = localStorage.getItem(`_enc_${key}`);
         if (encrypted) {
-          const decrypted = this.decrypt(encrypted);
-          return decrypted ? JSON.parse(decrypted) : null;
+          try {
+            const decrypted = this.decrypt(encrypted);
+            if (!decrypted) return null;
+            
+            try {
+              return JSON.parse(decrypted);
+            } catch (parseErr) {
+              // Decryption produced invalid JSON - old data format or encryption key mismatch
+              console.warn(`⚠️ Corrupted data for ${key}, clearing...`);
+              this.removeItem(key);
+              return null;
+            }
+          } catch (decryptErr) {
+            console.warn(`⚠️ Failed to decrypt ${key}, clearing...`);
+            this.removeItem(key);
+            return null;
+          }
         }
         // Migrate plain data if it exists
         const plain = localStorage.getItem(key);
