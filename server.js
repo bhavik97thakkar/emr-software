@@ -7,7 +7,22 @@ const jwt = require('jsonwebtoken'); // Security: JWT for session management
 const rateLimit = require('express-rate-limit'); // Security: Flood protection
 const app = express();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'medcore-clinical-vault-key-2026';
+function requireEnv(name) {
+  const v = process.env[name];
+  if (!v || String(v).trim() === '') {
+    console.error(`❌ Missing required environment variable: ${name}`);
+    process.exit(1);
+  }
+  return v;
+}
+
+// Required secrets for production security
+const MONGODB_URI = requireEnv('MONGODB_URI');
+const JWT_SECRET = requireEnv('JWT_SECRET');
+const ENCRYPTION_KEY = requireEnv('ENCRYPTION_KEY'); // Required for encryption utilities (even if not used by every endpoint)
+const RESET_TOKEN = requireEnv('RESET_TOKEN'); // Second factor for destructive tenant reset
+
+void ENCRYPTION_KEY; // Ensures variable is referenced (lint/clarity)
 const JWT_EXPIRY = '1h'; // 1-hour token expiry for security
 
 // ════════════════════════════════════════════════════════════
@@ -61,27 +76,31 @@ function isAccountLocked(email) {
   return lockTime && Date.now() < lockTime;
 }
 
-// CORS Configuration for deployment
+// CORS Configuration for deployment (explicit allowlist)
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow localhost for development
-    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      return callback(null, true);
+    // Non-browser requests (no Origin) should pass (e.g., health checks)
+    if (!origin) return callback(null, true);
+
+    // Always allow localhost during development & local testing
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) return callback(null, true);
+
+    // If allowlist configured, enforce it strictly
+    if (allowedOrigins.length > 0) {
+      return callback(null, allowedOrigins.includes(origin));
     }
-    // Allow Netlify deployments
-    if (origin.includes('netlify.app')) {
-      return callback(null, true);
-    }
-    // Allow Render
-    if (origin.includes('onrender.com') || origin.includes('render.com')) {
-      return callback(null, true);
-    }
-    // Fallback: allow origin
-    callback(null, true);
+
+    // If no allowlist configured, block by default (secure-by-default)
+    return callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Reset-Token']
 };
 
 app.set('trust proxy', 1); // Trust proxy for Render deployment (required for express-rate-limit)
@@ -111,12 +130,6 @@ app.use((req, res, next) => {
   res.removeHeader('X-Powered-By');
   next();
 });
-
-// ════════════════════════════════════════════════════════════
-//  DATABASE CONNECTION (ADMIN)
-// ════════════════════════════════════════════════════════════
-const MONGODB_URI = process.env.MONGODB_URI ||
-  'mongodb+srv://draarticlinic:AartiClinic123@cluster0.adrly70.mongodb.net/medcore_admin?appName=Cluster0';
 
 // The main connection is used ONLY for the 'Configs' collection (Auth)
 mongoose.connect(MONGODB_URI)
@@ -584,126 +597,6 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
       console.log(`✅ Seeded "Dr. Aarti Clinic" (dr.aarti@medcore.in)`);
     }
 
-    // Special handling for demo credentials
-    if (email === 'demo@medcore.in' && password === 'demo123') {
-      let config = await Config.findOne({ email });
-      if (!config) {
-        config = await Config.create({
-          email: 'demo@medcore.in',
-          password: 'demo123',
-          clinicName: 'MedCore Demo Clinic',
-          tenantId: 'demo@medcore.in',
-          isDemo: true,
-          gdprConsent: true,
-          gdprConsentDate: new Date(),
-          privacyPolicyAccepted: true,
-          gdprConsentVersion: '1.0'
-        });
-      }
-
-      // Clear failed attempts
-      clearFailedLoginAttempts(email);
-      config.loginAttempts = 0;
-      config.lastLoginDate = new Date();
-      config.lastLoginIp = clientIp;
-      await config.save();
-
-      // Sign JWT with 1-hour expiry
-      const jwtToken = jwt.sign(
-        { email: config.email, tenantId: config.tenantId },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRY }
-      );
-
-      await logAudit('LOGIN_SUCCESS', email, config.tenantId, clientIp, { isDemo: true }, true);
-
-      res.json({
-        success: true,
-        user: {
-          name: config.clinicName,
-          email: config.email,
-          token: jwtToken,
-          tokenExpiry: JWT_EXPIRY,
-          tenantId: config.tenantId,
-          isDemo: true,
-          gdprConsent: config.gdprConsent,
-          requiresGdprConsent: !config.gdprConsent,
-          clinicDetails: { name: config.clinicName, address: config.address }
-        }
-      });
-      return;
-    }
-
-    // Special handling for Dr. Aarti account
-    if (email === 'dr.aarti@medcore.in' && password === 'AartiClinic123') {
-      try {
-        let config = await Config.findOne({ email });
-        if (!config) {
-          console.log(`🔍 Dr. Aarti account not found, creating...`);
-          config = await Config.create({
-            email: 'dr.aarti@medcore.in',
-            password: 'AartiClinic123',
-            clinicName: 'Dr. Aarti Clinic',
-            tenantId: 'dr.aarti@medcore.in',
-            gdprConsent: true,
-            gdprConsentDate: new Date(),
-            privacyPolicyAccepted: true,
-            gdprConsentVersion: '1.0'
-          });
-          console.log(`✅ Dr. Aarti account created successfully`);
-        } else {
-          console.log(`✅ Dr. Aarti account found in database`);
-          // Update password if different (in case it was created with old password)
-          if (config.password !== 'AartiClinic123') {
-            console.log(`🔄 Updating Dr. Aarti password`);
-            config.password = 'AartiClinic123';
-          }
-        }
-
-        // Ensure GDPR consent is set
-        if (!config.gdprConsent) {
-          config.gdprConsent = true;
-          config.gdprConsentDate = new Date();
-        }
-
-        // Clear failed attempts
-        clearFailedLoginAttempts(email);
-        config.loginAttempts = 0;
-        config.lastLoginDate = new Date();
-        config.lastLoginIp = clientIp;
-        await config.save();
-
-        // Sign JWT with 1-hour expiry
-        const jwtToken = jwt.sign(
-          { email: config.email, tenantId: config.tenantId },
-          JWT_SECRET,
-          { expiresIn: JWT_EXPIRY }
-        );
-
-        await logAudit('LOGIN_SUCCESS', email, config.tenantId, clientIp, { clinicName: 'Dr. Aarti' }, true);
-
-        console.log(`✅ Dr. Aarti login successful`);
-        res.json({
-          success: true,
-          user: {
-            name: config.clinicName,
-            email: config.email,
-            token: jwtToken,
-            tokenExpiry: JWT_EXPIRY,
-            tenantId: config.tenantId,
-            gdprConsent: config.gdprConsent,
-            requiresGdprConsent: !config.gdprConsent,
-            clinicDetails: { name: config.clinicName, address: config.address }
-          }
-        });
-        return;
-      } catch (drAartiErr) {
-        console.error(`❌ Dr. Aarti login error:`, drAartiErr.message);
-        await logAudit('LOGIN_ERROR_DR_AARTI', email, null, clientIp, { error: drAartiErr.message }, false);
-        return res.status(500).json({ error: 'Server error during Dr. Aarti login. Please try again.' });
-      }
-    }
-
     // Validate credentials
     const config = await Config.findOne({ email, password });
     if (config) {
@@ -839,6 +732,57 @@ app.post('/api/sync/push-all', syncLimiter, verifyAccess, async (req, res) => {
   } catch (err) {
     console.error(`push-all error [${req.tenantId}]:`, err);
     res.status(500).json({ error: 'Sync push failed' });
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+//  TENANT RESET (DESTRUCTIVE) - Requires 2nd factor token
+// ════════════════════════════════════════════════════════════
+
+app.post('/api/admin/reset-tenant', syncLimiter, verifyAccess, async (req, res) => {
+  try {
+    const provided = String(req.headers['x-reset-token'] || '');
+    if (!provided || provided !== RESET_TOKEN) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { Patient, Visit, Family, Appointment, Report, CustomDiagnosis, Template } = req.models;
+
+    const results = await Promise.all([
+      Patient.deleteMany({}),
+      Visit.deleteMany({}),
+      Family.deleteMany({}),
+      Appointment.deleteMany({}),
+      Report.deleteMany({}),
+      Template.deleteMany({}),
+      CustomDiagnosis.deleteMany({}),
+    ]);
+
+    await logAudit(
+      'TENANT_RESET',
+      req.email,
+      req.tenantId,
+      req.ip || req.connection.remoteAddress || 'unknown',
+      { deleted: results.map(r => r.deletedCount) },
+      true
+    );
+
+    res.json({
+      success: true,
+      tenantId: req.tenantId,
+      deleted: {
+        patients: results[0].deletedCount,
+        visits: results[1].deletedCount,
+        families: results[2].deletedCount,
+        appointments: results[3].deletedCount,
+        reports: results[4].deletedCount,
+        templates: results[5].deletedCount,
+        customDiagnoses: results[6].deletedCount,
+      },
+    });
+  } catch (err) {
+    console.error(`reset-tenant error [${req.tenantId}]:`, err);
+    res.status(500).json({ error: 'Tenant reset failed' });
   }
 });
 

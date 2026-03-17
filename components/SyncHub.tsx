@@ -22,16 +22,16 @@ import {
 import { DB } from '../services/db';
 import { GoogleGenAI } from "@google/genai";
 import { useToast } from '../context/ToastContext';
-import ConfirmationModal from './ConfirmationModal';
 
 const SyncHub = () => {
   const toast = useToast();
   const [syncStatus, setSyncStatus] = useState<any>(DB.getSyncStatus());
   const [stats, setStats] = useState<any>(null);
   const [isPulling, setIsPulling] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState('');
   const [aiAudit, setAiAudit] = useState<string | null>(null);
   const [isAuditing, setIsAuditing] = useState(false);
-  const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadData = async () => {
@@ -53,7 +53,25 @@ const SyncHub = () => {
     if (success) {
       toast.success("Cloud Pull successful. Registry refreshed.");
     } else {
-      toast.error("Pull failed. If this is Dr. Aarti's first sync, the server may be waking up. Please try again in 30 seconds.");
+      toast.error("Pull failed. Ensure internet connection.");
+    }
+  };
+
+  const handleResetClinic = async () => {
+    if (isResetting) return;
+    if (resetConfirmText.trim().toUpperCase() !== 'RESET') {
+      toast.error("Type RESET to confirm.");
+      return;
+    }
+    setIsResetting(true);
+    const success = await DB.resetClinicFresh();
+    setIsResetting(false);
+    if (success) {
+      setResetConfirmText('');
+      await loadData();
+      toast.success("Clinic reset complete. Fresh space ready.");
+    } else {
+      toast.error("Reset failed. Ensure RESET token + internet.");
     }
   };
 
@@ -68,12 +86,6 @@ const SyncHub = () => {
       else toast.error("Import failed. Invalid file format.");
     };
     reader.readAsText(file);
-  };
-  
-  const handlePurge = () => {
-    DB.purgeLocalCache();
-    toast.success("Clinical Session Reset: Local records cleared.");
-    loadData();
   };
 
   const isUpToDate = syncStatus.lastSync && new Date(syncStatus.lastSync) >= new Date(syncStatus.lastChange);
@@ -159,27 +171,46 @@ const SyncHub = () => {
               onClick={() => fileInputRef.current?.click()}
               color="indigo"
             />
-            <ActionCard
-              title="Clinical Session Reset"
-              desc="Securely wipe cached patient records from this device."
-              icon={Trash2}
-              onClick={() => setShowPurgeConfirm(true)}
-              color="rose"
-            />
             <input ref={fileInputRef} type="file" className="hidden" accept=".json" onChange={handleImport} />
           </div>
-        </div>
 
-        <ConfirmationModal
-          isOpen={showPurgeConfirm}
-          onClose={() => setShowPurgeConfirm(false)}
-          onConfirm={handlePurge}
-          title="Reset Clinical Session?"
-          message="This will securely wipe all cached patient records and diagnostic data from THIS machine. This action is local and will NOT affect cloud-synced data unless explicitly deleted."
-          confirmLabel="Purge Local Cache"
-          cancelLabel="Cancel"
-          type="danger"
-        />
+          <div className="bg-white rounded-[2.5rem] border border-rose-200 shadow-sm overflow-hidden">
+            <div className="p-8 bg-rose-50/60 border-b border-rose-100 flex items-center justify-between">
+              <h3 className="text-[10px] font-black text-rose-400 uppercase tracking-widest flex items-center">
+                <Trash2 size={18} className="mr-3 text-rose-600" />
+                Clinic Reset (Fresh Demo)
+              </h3>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 rounded-full bg-rose-500"></div>
+                <span className="text-[9px] font-black text-rose-600 uppercase">Destructive</span>
+              </div>
+            </div>
+            <div className="p-10 space-y-4">
+              <p className="text-[10px] text-slate-600 font-bold uppercase tracking-wide leading-relaxed">
+                This will permanently delete all cloud records for the current clinic tenant and clear local storage on this device.
+              </p>
+              <div className="flex flex-col md:flex-row gap-3 items-stretch">
+                <input
+                  value={resetConfirmText}
+                  onChange={(e) => setResetConfirmText(e.target.value)}
+                  placeholder="Type RESET to confirm"
+                  className="flex-1 px-5 py-4 bg-white border border-rose-200 rounded-2xl outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 font-black text-[11px] uppercase tracking-widest text-slate-900 placeholder:text-slate-300"
+                />
+                <button
+                  onClick={handleResetClinic}
+                  disabled={isResetting}
+                  className="px-6 py-4 rounded-2xl bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all flex items-center justify-center space-x-2 shadow-sm disabled:opacity-60"
+                >
+                  {isResetting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                  <span>Reset Now</span>
+                </button>
+              </div>
+              <p className="text-[9px] text-rose-600 font-black uppercase tracking-widest">
+                Requires secure reset token configured in deployment.
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="space-y-6">
           <div className="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm text-center registry-pulse">
@@ -234,10 +265,7 @@ const ActionCard = ({ title, desc, icon: Icon, onClick, color }: any) => (
     onClick={onClick}
     className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:border-blue-400 hover:shadow-xl transition-all text-left flex items-start space-x-5 group"
   >
-    <div className={`p-4 rounded-2xl shrink-0 group-hover:scale-110 transition-transform ${
-      color === 'blue' ? 'bg-blue-50 text-blue-600' : 
-      color === 'rose' ? 'bg-rose-50 text-rose-600' : 'bg-indigo-50 text-indigo-600'
-    }`}>
+    <div className={`p-4 rounded-2xl shrink-0 group-hover:scale-110 transition-transform ${color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-indigo-50 text-indigo-600'}`}>
       <Icon size={20} />
     </div>
     <div>

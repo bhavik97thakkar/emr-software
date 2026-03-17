@@ -11,7 +11,7 @@
 - ✅ All configurations done
 - ✅ Documentation complete
 
-**Your job**: Just click deploy buttons! 
+**Your job**: Just click deploy buttons!
 
 ---
 
@@ -29,9 +29,13 @@
    - Start: `node server.js`
 6. Add these environment variables:
    ```
-   MONGODB_URI=mongodb+srv://draarticlinic:AartiClinic123@cluster0.adrly70.mongodb.net/medcore_admin?appName=Cluster0
+   MONGODB_URI=<your_mongodb_atlas_connection_string>
    NODE_ENV=production
    PORT=10000
+   JWT_SECRET=<generate_a_long_random_secret>
+   ENCRYPTION_KEY=<generate_a_long_random_secret>
+   RESET_TOKEN=<generate_a_long_random_secret_used_only_for_clinic_reset>
+   ALLOWED_ORIGINS=https://<your-netlify-site>.netlify.app
    CLINIC_EMAIL=demo@medcore.in
    CLINIC_PASSWORD=demo123
    CLINIC_NAME=Dr. Aarti Clinic Demo
@@ -81,6 +85,7 @@
 ### STEP 4: Send to Dr. Aarti (5 min)
 
 Share this:
+
 ```
 🎉 Your EMR Demo is Ready!
 
@@ -91,11 +96,16 @@ Password: demo123
 Try it for 2-3 days and let me know your feedback!
 ```
 
+## 🔒 Security Notes (Must-Do)
+
+- **Never commit or share** real `MONGODB_URI`, `JWT_SECRET`, `ENCRYPTION_KEY`, or `RESET_TOKEN` in docs or screenshots.\n+- **Rotate secrets** after any public sharing.\n+- **ALLOWED_ORIGINS** should include only your production frontend origin(s).
+
 ---
 
 ## 🎓 DETAILED INSTRUCTIONS
 
 If above was too fast, follow:
+
 - **PRODUCTION_DEPLOYMENT_GUIDE.md** (comprehensive)
 - **DEPLOYMENT_CHECKLIST.md** (step-by-step)
 
@@ -104,18 +114,22 @@ If above was too fast, follow:
 ## 🆘 ISSUES?
 
 ### Frontend blank/error
+
 - Clear browser cache (Ctrl+Shift+Del)
 - Check VITE_API_URL in Netlify environment
 
 ### Login fails
+
 - Visit backend URL + `/api/health`
 - Should work if it returns JSON
 
 ### Data not syncing
+
 - Check "Cloud" section
 - Click "Pull from Cloud" manually
 
 ### Deployment stuck
+
 - Check service dashboards (Render & Netlify)
 - Look at deployment logs
 - Restart service
@@ -127,6 +141,7 @@ If above was too fast, follow:
 ## ⏭️ AFTER DEPLOYMENT
 
 Every time you `git push`:
+
 - Render auto-rebuilds backend (5-10 min)
 - Netlify auto-rebuilds frontend (5-10 min)
 - Live immediately after
