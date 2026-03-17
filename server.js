@@ -88,6 +88,11 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '100mb' }));
 
 // ════════════════════════════════════════════════════════════
+//  PREFLIGHT HANDLING (CORS)
+// ════════════════════════════════════════════════════════════
+app.options('*', cors(corsOptions)); // Enable preflight requests for all routes
+
+// ════════════════════════════════════════════════════════════
 //  SECURITY HEADERS MIDDLEWARE
 // ════════════════════════════════════════════════════════════
 app.use((req, res, next) => {
