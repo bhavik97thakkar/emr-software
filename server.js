@@ -470,6 +470,27 @@ app.get('/api/health', (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════
+//  DIAGNOSTIC ENDPOINT (No auth required)
+// ════════════════════════════════════════════════════════════
+app.get('/api/admin/accounts', async (req, res) => {
+  try {
+    const accounts = await Config.find({}, { email: 1, clinicName: 1, isDemo: 1, gdprConsent: 1, createdAt: 1 });
+    res.json({
+      totalAccounts: accounts.length,
+      accounts: accounts.map(a => ({
+        email: a.email,
+        clinic: a.clinicName,
+        isDemo: a.isDemo,
+        gdprConsent: a.gdprConsent,
+        created: a.createdAt
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch accounts', details: err.message });
+  }
+});
+
+// ════════════════════════════════════════════════════════════
 //  AUDIT LOG HELPER
 // ════════════════════════════════════════════════════════════
 async function logAudit(action, email, tenantId, ip, details = {}, success = true, errorMsg = null) {
@@ -495,7 +516,12 @@ async function logAudit(action, email, tenantId, ip, details = {}, success = tru
 
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
   try {
-    const { email, password, gdprConsent } = req.body;
+    let { email, password, gdprConsent } = req.body;
+    
+    // Normalize inputs (trim whitespace, convert email to lowercase)
+    email = (email || '').trim().toLowerCase();
+    password = (password || '').trim();
+    
     const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
 
     // Input validation
@@ -609,50 +635,72 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
 
     // Special handling for Dr. Aarti account
     if (email === 'dr.aarti@medcore.in' && password === 'AartiClinic123') {
-      let config = await Config.findOne({ email });
-      if (!config) {
-        config = await Config.create({
-          email: 'dr.aarti@medcore.in',
-          password: 'AartiClinic123',
-          clinicName: 'Dr. Aarti Clinic',
-          tenantId: 'dr.aarti@medcore.in',
-          gdprConsent: true,
-          gdprConsentDate: new Date(),
-          privacyPolicyAccepted: true,
-          gdprConsentVersion: '1.0'
-        });
-      }
-
-      // Clear failed attempts
-      clearFailedLoginAttempts(email);
-      config.loginAttempts = 0;
-      config.lastLoginDate = new Date();
-      config.lastLoginIp = clientIp;
-      await config.save();
-
-      // Sign JWT with 1-hour expiry
-      const jwtToken = jwt.sign(
-        { email: config.email, tenantId: config.tenantId },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRY, iat: Math.floor(Date.now() / 1000) }
-      );
-
-      await logAudit('LOGIN_SUCCESS', email, config.tenantId, clientIp, { clinicName: 'Dr. Aarti' }, true);
-
-      res.json({
-        success: true,
-        user: {
-          name: config.clinicName,
-          email: config.email,
-          token: jwtToken,
-          tokenExpiry: JWT_EXPIRY,
-          tenantId: config.tenantId,
-          gdprConsent: config.gdprConsent,
-          requiresGdprConsent: !config.gdprConsent,
-          clinicDetails: { name: config.clinicName, address: config.address }
+      try {
+        let config = await Config.findOne({ email });
+        if (!config) {
+          console.log(`🔍 Dr. Aarti account not found, creating...`);
+          config = await Config.create({
+            email: 'dr.aarti@medcore.in',
+            password: 'AartiClinic123',
+            clinicName: 'Dr. Aarti Clinic',
+            tenantId: 'dr.aarti@medcore.in',
+            gdprConsent: true,
+            gdprConsentDate: new Date(),
+            privacyPolicyAccepted: true,
+            gdprConsentVersion: '1.0'
+          });
+          console.log(`✅ Dr. Aarti account created successfully`);
+        } else {
+          console.log(`✅ Dr. Aarti account found in database`);
+          // Update password if different (in case it was created with old password)
+          if (config.password !== 'AartiClinic123') {
+            console.log(`🔄 Updating Dr. Aarti password`);
+            config.password = 'AartiClinic123';
+          }
         }
-      });
-      return;
+
+        // Ensure GDPR consent is set
+        if (!config.gdprConsent) {
+          config.gdprConsent = true;
+          config.gdprConsentDate = new Date();
+        }
+
+        // Clear failed attempts
+        clearFailedLoginAttempts(email);
+        config.loginAttempts = 0;
+        config.lastLoginDate = new Date();
+        config.lastLoginIp = clientIp;
+        await config.save();
+
+        // Sign JWT with 1-hour expiry
+        const jwtToken = jwt.sign(
+          { email: config.email, tenantId: config.tenantId },
+          JWT_SECRET,
+          { expiresIn: JWT_EXPIRY, iat: Math.floor(Date.now() / 1000) }
+        );
+
+        await logAudit('LOGIN_SUCCESS', email, config.tenantId, clientIp, { clinicName: 'Dr. Aarti' }, true);
+
+        console.log(`✅ Dr. Aarti login successful`);
+        res.json({
+          success: true,
+          user: {
+            name: config.clinicName,
+            email: config.email,
+            token: jwtToken,
+            tokenExpiry: JWT_EXPIRY,
+            tenantId: config.tenantId,
+            gdprConsent: config.gdprConsent,
+            requiresGdprConsent: !config.gdprConsent,
+            clinicDetails: { name: config.clinicName, address: config.address }
+          }
+        });
+        return;
+      } catch (drAartiErr) {
+        console.error(`❌ Dr. Aarti login error:`, drAartiErr.message);
+        await logAudit('LOGIN_ERROR_DR_AARTI', email, null, clientIp, { error: drAartiErr.message }, false);
+        return res.status(500).json({ error: 'Server error during Dr. Aarti login. Please try again.' });
+      }
     }
 
     // Validate credentials
