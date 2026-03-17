@@ -20,10 +20,19 @@ class SecureStorage {
   ];
 
   /**
-   * Encrypt using simple XOR with time-based key
+   * Generate consistent encryption key (based on session, not time)
+   */
+  private getKey(): string {
+    // Use a stable key that doesn't change over time
+    // This ensures tokens stored early in session can be retrieved later
+    return "medcore-frontend-2026-stable-encryption-key";
+  }
+
+  /**
+   * Encrypt using XOR with consistent key
    */
   private encrypt(data: string): string {
-    const key = "medcore-frontend-" + Math.floor(Date.now() / 1000000); // Simple key derivation
+    const key = this.getKey();
     let encrypted = "";
     for (let i = 0; i < data.length; i++) {
       encrypted += String.fromCharCode(
@@ -39,7 +48,7 @@ class SecureStorage {
   private decrypt(encoded: string): string {
     try {
       const encrypted = atob(encoded);
-      const key = "medcore-frontend-" + Math.floor(Date.now() / 1000000);
+      const key = this.getKey();
       let decrypted = "";
       for (let i = 0; i < encrypted.length; i++) {
         decrypted += String.fromCharCode(
