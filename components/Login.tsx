@@ -88,10 +88,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex justify-between items-center ml-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Access Key</label>
-                  <button type="button" className="text-[9px] font-black text-blue-600 hover:underline uppercase tracking-widest">Reset Key?</button>
-                </div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Access Key</label>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={18} />
                   <input 
@@ -173,9 +170,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
           
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            Don't have an account? <span className="text-blue-500 cursor-pointer hover:underline">Contact System Admin</span>
-          </p>
+
           <div className="flex items-center space-x-6">
             <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center">
               <Globe size={10} className="mr-1.5" /> Region: MH-Mumbai

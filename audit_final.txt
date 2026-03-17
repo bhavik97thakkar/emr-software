@@ -1,0 +1,19 @@
+AUDIT RESULT:
+
+Audit DB: emr_demo_medcore_in
+   templates : 0
+   families : 0
+   appointments : 0
+   reports : 0
+   customdiagnoses : 0
+   visits : 0
+   patients : 0
+
+Audit DB: emr_dr_aarti
+   customdiagnoses : 10
+   templates : 3
+   appointments : 3
+   visits : 5
+   reports : 0
+   patients : 5
+   families : 2
