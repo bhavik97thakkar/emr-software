@@ -122,7 +122,11 @@ const Sidebar = ({ isOpen, toggle, isCollapsed, onToggleCollapse, currentUser, o
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-900/40 shrink-0">
             <Stethoscope size={22} strokeWidth={2.5} />
           </div>
-          {!isCollapsed && <span className="text-sm font-black text-white tracking-widest font-serif-clinical">MEDCORE</span>}
+          {!isCollapsed && (
+            <span className="text-sm font-black text-white tracking-widest font-serif-clinical truncate max-w-[180px]">
+              {(currentUser?.clinicDetails?.name || currentUser?.name || 'MedCore').toUpperCase()}
+            </span>
+          )}
         </div>
         <button onClick={onToggleCollapse} className={`hidden md:flex p-2 hover:bg-white/5 rounded-xl text-slate-500 hover:text-white transition-all ${isCollapsed ? 'w-10 h-10 items-center justify-center' : ''}`}>
           {isCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
@@ -430,7 +434,11 @@ const App = () => {
         <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
           <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 h-20 flex items-center px-8 justify-between no-print shadow-sm">
             <button onClick={() => setIsSidebarOpen(true)} className="p-2 md:hidden text-slate-600 hover:text-slate-900 transition-colors"><Menu size={24} /></button>
-            <div className="flex-1 flex justify-center md:justify-start"><div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hidden lg:block">MedCore Clinical Terminal v4.2</div></div>
+            <div className="flex-1 flex justify-center md:justify-start">
+              <div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hidden lg:block">
+                {(currentUser?.clinicDetails?.name || currentUser?.name || 'MedCore').toUpperCase()} CLINICAL TERMINAL v4.2
+              </div>
+            </div>
             <div className="flex items-center space-x-6">
               <ConnectivityBadge />
               <Link to="/new-visit" className="encounter-entry flex items-center space-x-3 bg-[#050912] text-white px-7 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all">
